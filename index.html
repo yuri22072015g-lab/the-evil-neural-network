@@ -2,1568 +2,211 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Yourblocks — Полное удаление аккаунтов</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор фото HTML — Нейросеть</title>
     <style>
-        /* ===== ВСЕ СТИЛИ (без изменений, как в исходном коде) ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
         body {
-            overflow: hidden;
-            background: #141414;
-            touch-action: none;
-        }
-        #login-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
-        }
-        .login-container {
-            background: rgba(30, 30, 40, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 30px;
-            width: 90%;
-            max-width: 400px;
-            border: 2px solid #4CAF50;
-            box-shadow: 0 0 50px rgba(76, 175, 80, 0.3);
-            animation: slideUp 0.5s;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .login-logo {
-            text-align: center;
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #4CAF50;
-        }
-        .login-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: white;
-        }
-        .login-subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .login-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px;
-            border-radius: 50px;
-        }
-        .login-tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #888;
-            font-weight: bold;
-        }
-        .login-tab.active {
-            background: #4CAF50;
-            color: white;
-        }
-        .login-form {
-            display: none;
-        }
-        .login-form.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        .input-group label {
-            display: block;
-            color: #888;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid #333;
-            border-radius: 15px;
-            color: white;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        .input-group input:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 15px;
-        }
-        .login-btn:hover {
-            transform: scale(1.02);
-            background: #45a049;
-        }
-        .guest-btn {
-            width: 100%;
-            padding: 15px;
-            background: transparent;
-            color: #888;
-            border: 2px solid #333;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .guest-btn:hover {
-            border-color: #4CAF50;
-            color: white;
-        }
-        .error-message {
-            color: #ff5555;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-            display: none;
-        }
-        .suggested-names {
-            margin-top: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-        .suggested-name {
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid #4CAF50;
-            color: #4CAF50;
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
-        }
-        .suggested-name:hover {
-            background: #4CAF50;
-            color: white;
-            transform: scale(1.05);
-        }
-        .suggested-name:active {
-            transform: scale(0.95);
-        }
-        #menu-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #141414;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            overflow-y: auto;
-            color: white;
-        }
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            height: 100%;
-            background: #1e1e1e;
-            padding: 20px 0;
-            border-right: 1px solid #333;
-            z-index: 100;
-        }
-        .sidebar-header {
-            padding: 0 20px 20px 20px;
-            border-bottom: 1px solid #333;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 20px;
-        }
-        .logo span {
-            color: #4CAF50;
-        }
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            background: #2a2a2a;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            border: 2px solid #4CAF50;
-        }
-        .user-info-side {
-            flex: 1;
-        }
-        .user-name {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 4px;
-            color: #fff;
-        }
-        .user-status {
-            font-size: 12px;
-            color: #4CAF50;
-        }
-        .user-status span {
-            color: #888;
-            margin-left: 5px;
-        }
-        .nav-menu {
-            padding: 20px 0;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #888;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .nav-item:hover {
-            background: #2a2a2a;
-            color: #fff;
-        }
-        .nav-item.active {
-            background: #4CAF50;
-            color: white;
-        }
-        .nav-item i {
-            font-size: 20px;
-            width: 24px;
-            text-align: center;
-        }
-        .main-content {
-            margin-left: 250px;
-            padding: 20px 30px;
-            min-height: 100vh;
-        }
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .content-header h1 {
-            font-size: 28px;
-            color: #fff;
-        }
-        .header-stats {
-            display: flex;
-            gap: 20px;
-            color: #888;
-        }
-        .header-stats span {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .content-section {
-            display: none;
-        }
-        .content-section.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-        .game-card-large {
-            background: #1e1e1e;
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 3px solid transparent;
-            max-width: 600px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
             margin: 0 auto;
-        }
-        .game-card-large:hover {
-            transform: translateY(-5px);
-            border-color: #4CAF50;
-        }
-        .game-card-large.selected {
-            border-color: #4CAF50;
-            box-shadow: 0 0 40px rgba(76, 175, 80, 0.4);
-        }
-        .game-image-large {
-            height: 200px;
-            background: linear-gradient(135deg, #2a5a2a, #1a3a1a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 64px;
-            position: relative;
-        }
-        .game-image-large::after {
-            content: '▶';
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: #4CAF50;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .game-card-large:hover .game-image-large::after {
-            opacity: 1;
-        }
-        .game-info-large {
-            padding: 25px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
             text-align: center;
         }
-        .game-title-large {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #4CAF50;
+        h1 {
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+            color: #2c3e50;
         }
-        .game-description-large {
-            font-size: 16px;
-            color: #888;
-            margin-bottom: 20px;
+        p {
+            margin-top: 0;
+            color: #555;
         }
-        .game-features {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .feature {
-            text-align: center;
-        }
-        .feature-icon {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        .feature-text {
-            font-size: 14px;
-            color: #888;
-        }
-        .feature-text span {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .profile-header {
-            background: #1e1e1e;
+        .container {
+            background: white;
             border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            display: flex;
-            gap: 30px;
-            align-items: center;
-            flex-wrap: wrap;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        .profile-avatar-large {
-            width: 120px;
-            height: 120px;
-            background: #2a2a2a;
+        input[type="text"] {
+            width: 70%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
             border-radius: 30px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            margin-left: 10px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .image-container {
+            margin-top: 30px;
+            min-height: 300px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 60px;
-            border: 4px solid #4CAF50;
-        }
-        .profile-info h2 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        .profile-stats {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        .stat-label {
-            color: #888;
-            font-size: 13px;
-        }
-        .customization-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .color-section {
-            background: #1e1e1e;
-            border-radius: 16px;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 20px;
             padding: 20px;
+            border: 2px dashed #ccc;
         }
-        .color-section h3 {
-            margin-bottom: 15px;
-            color: #fff;
-            font-size: 16px;
+        .image-container img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        .color-picker {
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .examples {
+            margin-top: 20px;
             display: flex;
-            gap: 10px;
             flex-wrap: wrap;
-        }
-        .color-option {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-        .color-option.selected {
-            border-color: white;
-            box-shadow: 0 0 15px currentColor;
-        }
-        .play-button {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.5);
-            z-index: 1001;
-            transition: all 0.3s;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
             gap: 10px;
-        }
-        .play-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.7);
-        }
-        .play-button:active {
-            transform: scale(0.95);
-        }
-        #game-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            display: none;
-        }
-        #game-container.active {
-            display: block;
-        }
-        .game-exit-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 200;
-            background: rgba(255, 80, 80, 0.9);
-            color: white;
-            border: 2px solid white;
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            font-size: 24px;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px rgba(255,0,0,0.5);
-            transition: all 0.3s;
-        }
-        .game-exit-button:hover {
-            transform: scale(1.1);
-            background: rgba(255, 40, 40, 1);
-        }
-        .game-exit-button:active {
-            transform: scale(0.95);
-        }
-        .exit-hint {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            z-index: 200;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-size: 12px;
-            border: 1px solid #ff5555;
-            backdrop-filter: blur(5px);
-        }
-        .ground-indicator {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            border: 2px solid #4CAF50;
-            z-index: 200;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s;
-        }
-        .ground-indicator.onground {
-            border-color: #4CAF50;
-            color: #4CAF50;
-        }
-        .ground-indicator.air {
-            border-color: #ff5555;
-            color: #ff5555;
-        }
-        .players-count {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 200;
-            background: rgba(0,0,0,0.7);
-            color: #4CAF50;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            border: 2px solid #4CAF50;
-            backdrop-filter: blur(5px);
-        }
-        .server-status {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 200;
-            background: rgba(0,0,0,0.7);
-            color: #4CAF50;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            border: 2px solid #4CAF50;
-            backdrop-filter: blur(5px);
-            white-space: nowrap;
-        }
-        .jump-hint {
-            position: absolute;
-            bottom: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.5);
-            font-size: 12px;
-            z-index: 200;
-        }
-        #mobile-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 150;
-            pointer-events: none;
-            display: none;
-        }
-        #mobile-controls.active {
-            display: block;
-        }
-        #left-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            z-index: 151;
-            pointer-events: auto;
-            background: transparent;
-            touch-action: none;
-        }
-        #right-area {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            z-index: 151;
-            pointer-events: auto;
-            background: transparent;
-            touch-action: none;
-        }
-        #joystick-left {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            width: 120px;
-            height: 120px;
-            background: rgba(30, 30, 40, 0.7);
-            border-radius: 60px;
-            backdrop-filter: blur(10px);
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            z-index: 152;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
             justify-content: center;
         }
-        #joystick-handle {
-            width: 50px;
-            height: 50px;
-            background: rgba(76, 175, 80, 0.9);
-            border-radius: 25px;
-            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
-            transition: transform 0.01s;
-            border: 2px solid white;
-        }
-        #jump-button {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 80, 80, 0.9);
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            border: 3px solid white;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
-            z-index: 152;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: all 0.1s;
-        }
-        #jump-button.active {
-            transform: scale(0.9);
-            background: rgba(255, 40, 40, 1);
-        }
-        .logout-btn {
-            position: fixed;
-            top: 20px;
-            left: 270px;
-            background: rgba(255, 80, 80, 0.9);
-            color: white;
+        .example-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
             border: none;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            cursor: pointer;
-            z-index: 1002;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 2px solid white;
-            transition: all 0.3s;
-        }
-        .logout-btn:hover {
-            background: rgba(255, 40, 40, 1);
-            transform: scale(1.05);
-        }
-        .logout-btn:active {
-            transform: scale(0.95);
-        }
-        /* Админ-кнопка в игре */
-        #admin-game-button {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            z-index: 250;
-            background: #333;
-            color: white;
-            border-radius: 30px;
-            padding: 10px 15px;
-            cursor: pointer;
-            display: none;
-            border: 2px solid #4CAF50;
-            font-weight: bold;
-            backdrop-filter: blur(5px);
-        }
-        #admin-game-menu {
-            position: absolute;
-            top: 130px;
-            right: 20px;
-            z-index: 250;
-            background: #222;
-            border: 2px solid #4CAF50;
-            border-radius: 16px;
-            padding: 15px;
-            display: none;
-            color: white;
-            backdrop-filter: blur(5px);
-        }
-        #admin-game-menu h4 {
-            margin-bottom: 10px;
-            color: #4CAF50;
-        }
-        #admin-game-menu label {
-            display: block;
-            margin: 5px 0;
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                overflow: hidden;
-            }
-            .sidebar .logo,
-            .user-profile,
-            .nav-item span {
-                display: none;
-            }
-            .main-content {
-                margin-left: 70px;
-                padding: 15px;
-            }
-            .nav-item {
-                justify-content: center;
-                padding: 15px;
-            }
-            .nav-item i {
-                margin: 0;
-                font-size: 24px;
-            }
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            .game-features {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .play-button {
-                bottom: 20px;
-                right: 20px;
-                padding: 12px 25px;
-                font-size: 16px;
-            }
-            .logout-btn {
-                left: 90px;
-                padding: 8px 15px;
-                font-size: 12px;
-            }
-            .game-exit-button {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
-            }
-            .server-status {
-                font-size: 12px;
-                padding: 5px 10px;
-                top: 10px;
-            }
-            .players-count {
-                font-size: 12px;
-                padding: 5px 10px;
-                top: 10px;
-                left: 10px;
-            }
-            #joystick-left {
-                width: 100px;
-                height: 100px;
-                bottom: 30px;
-                left: 30px;
-            }
-            #joystick-handle {
-                width: 40px;
-                height: 40px;
-            }
-            #jump-button {
-                width: 80px;
-                height: 80px;
-                bottom: 30px;
-                right: 30px;
-                font-size: 16px;
-            }
-            #admin-game-button {
-                top: 70px;
-                right: 10px;
-                padding: 8px 12px;
-                font-size: 14px;
-            }
-            #admin-game-menu {
-                top: 120px;
-                right: 10px;
-                padding: 10px;
-            }
-        }
-        #debug-panel {
-            position: absolute;
-            bottom: 250px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: #0ff;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 12px;
-            z-index: 300;
-            border: 2px solid #0ff;
-            display: none;
-            max-width: 80%;
-            word-break: break-word;
-            text-align: center;
-            pointer-events: none;
-        }
-        #manual-connect {
-            position: absolute;
-            bottom: 200px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 300;
-            display: flex;
-            gap: 5px;
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
-            border-radius: 30px;
-            border: 2px solid #4CAF50;
-        }
-        #manual-connect input {
-            padding: 8px;
+            padding: 8px 16px;
             border-radius: 20px;
-            border: none;
-            width: 150px;
-            background: #333;
-            color: white;
-        }
-        #manual-connect button {
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: none;
-            background: #4CAF50;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
         }
-        .game-exit-button,
-        .exit-hint,
-        .server-status,
-        .players-count,
-        .ground-indicator,
-        .jump-hint,
-        #debug-panel,
-        #manual-connect,
-        #mobile-controls {
-            display: none !important;
+        .example-btn:hover {
+            background: #bdc3c7;
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
         }
     </style>
-    <!-- Firebase SDK (с функциями) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
-    <!-- PeerJS -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <!-- Экран входа -->
-    <div id="login-screen">
-        <div class="login-container">
-            <div class="login-logo">🧱</div>
-            <div class="login-title">YOURBLOCKS</div>
-            <div class="login-subtitle">Войди, чтобы продолжить</div>
-            <div class="login-tabs">
-                <div class="login-tab active" onclick="switchLoginTab('login')">Вход</div>
-                <div class="login-tab" onclick="switchLoginTab('register')">Регистрация</div>
-            </div>
-            <div id="login-form" class="login-form active">
-                <div class="input-group">
-                    <label>👤 Логин</label>
-                    <input type="text" id="login-username" placeholder="Введите логин">
-                </div>
-                <div class="input-group">
-                    <label>🔒 Пароль</label>
-                    <input type="password" id="login-password" placeholder="Введите пароль">
-                </div>
-                <button class="login-btn" onclick="handleLogin()">Войти</button>
-                <button class="guest-btn" onclick="handleGuest()">Продолжить как гость</button>
-                <div id="login-error" class="error-message"></div>
-            </div>
-            <div id="register-form" class="login-form">
-                <div class="input-group">
-                    <label>👤 Логин</label>
-                    <input type="text" id="register-username" placeholder="Придумайте логин">
-                </div>
-                <div class="input-group">
-                    <label>🔒 Пароль</label>
-                    <input type="password" id="register-password" placeholder="Придумайте пароль">
-                </div>
-                <div class="input-group">
-                    <label>🔒 Подтверждение</label>
-                    <input type="password" id="register-confirm" placeholder="Повторите пароль">
-                </div>
-                <button class="login-btn" onclick="handleRegister()">Зарегистрироваться</button>
-                <button class="guest-btn" onclick="handleGuest()">Продолжить как гость</button>
-                <div id="register-error" class="error-message"></div>
-                <div id="suggested-usernames" class="suggested-names"></div>
-            </div>
+    <div class="container">
+        <h1>🎨 Генератор фото по описанию</h1>
+        <p>Нейросеть создаст изображение по вашему тексту. Попробуйте что-то вроде <em>"современный сайт с тёмной темой"</em></p>
+        
+        <div style="margin: 20px 0;">
+            <input type="text" id="prompt" placeholder="Введите описание изображения..." value="красивый лендинг с космической тематикой">
+            <button id="generateBtn">Сгенерировать</button>
+        </div>
+        
+        <div class="examples">
+            <button class="example-btn">лендинг космос</button>
+            <button class="example-btn">интернет-магазин одежды</button>
+            <button class="example-btn">блог о путешествиях</button>
+            <button class="example-btn">панель администратора</button>
+            <button class="example-btn">сайт ресторана</button>
+            <button class="example-btn">портфолио фотографа</button>
+        </div>
+        
+        <div class="image-container" id="imageContainer">
+            <div class="loading" id="loadingText">✨ Здесь появится сгенерированное изображение</div>
         </div>
     </div>
-
-    <!-- Главное меню -->
-    <div id="menu-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">YOUR<span>BLOCKS</span></div>
-                <div class="user-profile">
-                    <div class="user-avatar" id="sidebar-avatar">🧱</div>
-                    <div class="user-info-side">
-                        <div class="user-name" id="sidebar-username">Гость</div>
-                        <div class="user-status" id="sidebar-status">50 <span>Близкий</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="nav-menu">
-                <div class="nav-item active" onclick="switchPage('home')">
-                    <i>🏠</i>
-                    <span>Главная страница</span>
-                </div>
-                <div class="nav-item" onclick="switchPage('profile')">
-                    <i>👤</i>
-                    <span>Профиль</span>
-                </div>
-                <div class="nav-item" onclick="switchPage('avatar')">
-                    <i>🎨</i>
-                    <span>Аватар</span>
-                </div>
-                <div class="nav-item" onclick="switchPage('settings')">
-                    <i>⚙️</i>
-                    <span>Настройки</span>
-                </div>
-                <div class="nav-item" onclick="switchPage('friends')">
-                    <i>👥</i>
-                    <span>Друзья</span>
-                </div>
-                <!-- Админ-пункт (скрыт по умолчанию) -->
-                <div class="nav-item" id="admin-nav-item" onclick="switchPage('admin')" style="display: none;">
-                    <i>🛡️</i>
-                    <span>Админ панель</span>
-                </div>
-            </div>
-        </div>
-        <button class="logout-btn" onclick="logout()">
-            <span>🚪</span> Выйти
-        </button>
-        <div class="main-content">
-            <div class="content-header">
-                <h1 id="page-title">Главная страница</h1>
-                <div class="header-stats">
-                    <div>👥 <span id="global-online">1</span> онлайн</div>
-                    <div>🎮 <span>1</span> игра</div>
-                </div>
-            </div>
-            <div id="home-section" class="content-section active">
-                <h2 style="color: #fff; margin-bottom: 30px; text-align: center;">🔥 Игра дня</h2>
-                <div class="game-card-large" onclick="selectGame()">
-                    <div class="game-image-large">🏃‍♂️</div>
-                    <div class="game-info-large">
-                        <div class="game-title-large">PARKOUR MAZE</div>
-                        <div class="game-description-large">Паркур + Лабиринт — мультиплеер!</div>
-                        <div class="game-features">
-                            <div class="feature">
-                                <div class="feature-icon">🏃</div>
-                                <div class="feature-text"><span>20</span> платформ</div>
-                            </div>
-                            <div class="feature">
-                                <div class="feature-icon">🧱</div>
-                                <div class="feature-text"><span>лабиринт</span> справа</div>
-                            </div>
-                            <div class="feature">
-                                <div class="feature-icon">🌐</div>
-                                <div class="feature-text"><span>общий</span> сервер</div>
-                            </div>
-                            <div class="feature">
-                                <div class="feature-icon">👥</div>
-                                <div class="feature-text"><span id="game-players">1</span> сейчас</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 25px; color: #4CAF50; font-size: 18px;">
-                            ⭐ 4.9 (2.5K отзывов)
-                        </div>
-                    </div>
-                </div>
-                <div id="selected-game-info" style="margin-top: 30px; padding: 20px; background: #1e1e1e; border-radius: 16px;">
-                    <div style="display: flex; justify-content: center;">
-                        <button class="play-button" style="position: static;" onclick="startGame()">▶ ВОЙТИ В ИГРУ</button>
-                    </div>
-                </div>
-            </div>
-            <div id="profile-section" class="content-section">
-                <div class="profile-header">
-                    <div class="profile-avatar-large" id="profile-avatar">🧱</div>
-                    <div class="profile-info">
-                        <h2 id="profile-username">Гость</h2>
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">50</div>
-                                <div class="stat-label">Уровень</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="profile-friends-count">0</div>
-                                <div class="stat-label">Друзья</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">567</div>
-                                <div class="stat-label">Игры</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <h3 style="color: #fff; margin: 20px 0;">Недавние достижения</h3>
-                <div style="background: #1e1e1e; border-radius: 16px; padding: 20px;">
-                    <p style="color: #888;">🏆 Пройден лабиринт за 2 минуты</p>
-                    <p style="color: #888;">⭐ Собрано 50 монет в паркуре</p>
-                    <p style="color: #888;">🚀 100 прыжков без падения</p>
-                </div>
-            </div>
-            <div id="avatar-section" class="content-section">
-                <h2 style="color: #fff; margin-bottom: 20px;">Кастомизация аватара</h2>
-                <div style="display: flex; gap: 30px; margin-bottom: 30px; flex-wrap: wrap;">
-                    <div class="profile-avatar-large" id="customize-avatar">🧱</div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <p style="color: #888;">Настрой внешность своего персонажа</p>
-                    </div>
-                </div>
-                <div class="customization-grid">
-                    <div class="color-section">
-                        <h3>👤 Голова</h3>
-                        <div class="color-picker">
-                            <div class="color-option" style="background: #ffccaa;" onclick="setPartColor('head', '#ffccaa', this)"></div>
-                            <div class="color-option" style="background: #8b5a2b;" onclick="setPartColor('head', '#8b5a2b', this)"></div>
-                            <div class="color-option" style="background: #f5deb3;" onclick="setPartColor('head', '#f5deb3', this)"></div>
-                            <div class="color-option" style="background: #d2b48c;" onclick="setPartColor('head', '#d2b48c', this)"></div>
-                            <div class="color-option" style="background: #cd853f;" onclick="setPartColor('head', '#cd853f', this)"></div>
-                        </div>
-                    </div>
-                    <div class="color-section">
-                        <h3>👕 Тело</h3>
-                        <div class="color-picker">
-                            <div class="color-option" style="background: #3366ff;" onclick="setPartColor('body', '#3366ff', this)"></div>
-                            <div class="color-option" style="background: #ff4444;" onclick="setPartColor('body', '#ff4444', this)"></div>
-                            <div class="color-option" style="background: #44ff44;" onclick="setPartColor('body', '#44ff44', this)"></div>
-                            <div class="color-option" style="background: #ffff44;" onclick="setPartColor('body', '#ffff44', this)"></div>
-                            <div class="color-option" style="background: #ff44ff;" onclick="setPartColor('body', '#ff44ff', this)"></div>
-                        </div>
-                    </div>
-                    <div class="color-section">
-                        <h3>🦵 Ноги</h3>
-                        <div class="color-picker">
-                            <div class="color-option" style="background: #2244aa;" onclick="setPartColor('legs', '#2244aa', this)"></div>
-                            <div class="color-option" style="background: #aa2222;" onclick="setPartColor('legs', '#aa2222', this)"></div>
-                            <div class="color-option" style="background: #22aa22;" onclick="setPartColor('legs', '#22aa22', this)"></div>
-                            <div class="color-option" style="background: #aaaa22;" onclick="setPartColor('legs', '#aaaa22', this)"></div>
-                            <div class="color-option" style="background: #aa22aa;" onclick="setPartColor('legs', '#aa22aa', this)"></div>
-                        </div>
-                    </div>
-                    <div class="color-section">
-                        <h3>🫱 Руки</h3>
-                        <div class="color-picker">
-                            <div class="color-option" style="background: #2244aa;" onclick="setPartColor('arms', '#2244aa', this)"></div>
-                            <div class="color-option" style="background: #aa2222;" onclick="setPartColor('arms', '#aa2222', this)"></div>
-                            <div class="color-option" style="background: #22aa22;" onclick="setPartColor('arms', '#22aa22', this)"></div>
-                            <div class="color-option" style="background: #aaaa22;" onclick="setPartColor('arms', '#aaaa22', this)"></div>
-                            <div class="color-option" style="background: #aa22aa;" onclick="setPartColor('arms', '#aa22aa', this)"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="settings-section" class="content-section">
-                <h2 style="color: #fff; margin-bottom: 20px;">Настройки аккаунта</h2>
-                <div style="background: #1e1e1e; border-radius: 16px; padding: 30px; text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-                    <h3 style="color: #fff; margin-bottom: 10px;">Удаление аккаунта</h3>
-                    <p style="color: #888; margin-bottom: 30px;">Это действие невозможно отменить. Все ваши данные будут удалены навсегда.</p>
-                    <button class="login-btn" style="background: #ff5555; width: auto; display: inline-block; padding: 15px 40px;" onclick="deleteAccount()">УДАЛИТЬ АККАУНТ</button>
-                </div>
-            </div>
-            <div id="friends-section" class="content-section">
-                <div style="text-align: center; padding: 50px; color: #888;">
-                    <div style="font-size: 64px;">👥</div>
-                    <h3>Друзья</h3>
-                    <p>В мультиплеере вы можете встретить друзей!</p>
-                </div>
-            </div>
-            <!-- Админ-панель -->
-            <div id="admin-section" class="content-section">
-                <h2 style="color: #fff; margin-bottom: 20px;">Администрирование</h2>
-                <div id="admin-panel" style="background: #1e1e1e; border-radius: 16px; padding: 20px;">
-                    <p>Загрузка пользователей...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Игровой контейнер (полная версия из исходного кода) -->
-    <div id="game-container">
-        <button class="game-exit-button" onclick="exitGame()">✕</button>
-        <div class="exit-hint">Нажми ESC или ✕ чтобы выйти</div>
-        <div class="server-status" id="server-status">🔵 ПОДКЛЮЧЕНИЕ...</div>
-        <div class="players-count" id="players-count">👥 1 в комнате</div>
-        <div class="ground-indicator onground" id="ground-indicator">🟢 НА ЗЕМЛЕ</div>
-        <div class="jump-hint">👆 Левая часть - движение, правая - камера + прыжок</div>
-
-        <div id="debug-panel"></div>
-        <div id="manual-connect" style="display: none;">
-            <input type="text" id="peer-id-input" placeholder="ID друга">
-            <button onclick="manualConnect()">Подключиться</button>
-        </div>
-
-        <div id="mobile-controls">
-            <div id="left-area"></div>
-            <div id="right-area"></div>
-            <div id="joystick-left">
-                <div id="joystick-handle"></div>
-            </div>
-            <div id="jump-button">
-                ПРЫЖОК
-            </div>
-        </div>
-
-        <!-- Админ-кнопка в игре -->
-        <div id="admin-game-button" onclick="toggleAdminGameMenu()">🛡️ Admin</div>
-        <div id="admin-game-menu">
-            <h4>Admin режимы</h4>
-            <label><input type="checkbox" id="admin-noclip" onchange="toggleAdminMode('noclip')"> Проходить сквозь стены</label><br>
-            <label><input type="checkbox" id="admin-fly" onchange="toggleAdminMode('fly')"> Летать</label><br>
-            <label><input type="checkbox" id="admin-godmode" onchange="toggleAdminMode('godmode')"> Бессмертие</label><br>
-        </div>
-
-        <div id="game-canvas"></div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+    
+    <footer>
+        Работает через бесплатное API <a href="https://pollinations.ai" target="_blank">Pollinations.ai</a> · 
+        Модель: Stable Diffusion · <a href="#" id="disclaimerLink">О проекте</a>
+    </footer>
 
     <script>
-        // ==================== FIREBASE ИНИЦИАЛИЗАЦИЯ ====================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCMgDxuPbye5rpZcS7JAHD_6PEDbAc3ZdU",
-            authDomain: "yourblocks-ccdb7.firebaseapp.com",
-            projectId: "yourblocks-ccdb7",
-            storageBucket: "yourblocks-ccdb7.firebasestorage.app",
-            messagingSenderId: "531017606276",
-            appId: "1:531017606276:web:5eab2f87a2f9f5c885ced1",
-            measurementId: "G-JSWF0QVSJ9"
-        };
-        firebase.initializeApp(firebaseConfig);
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const functions = firebase.functions(); // для вызова облачной функции
-
-        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
-        let currentUser = null;
-        let playerColors = {
-            head: '#ffccaa',
-            body: '#3366ff',
-            legs: '#2244aa',
-            arms: '#2244aa'
-        };
-        let sessionListener = null;
-        let adminNoClip = false, adminFly = false, adminGodMode = false;
-        let originalPlayerMass = 5;
-        let cameraDistance = 8, firstPerson = false;
-        const minDistance = 2, maxDistance = 15;
-        let gameActive = false;
-
-        // Игровые переменные (для краткости объявлены, но не инициализированы – будут заданы в initThreeJSGame)
-        let scene, camera, renderer, yawObject, pitchObject, world;
-        let localPlayerBody, localModel;
-        let keys = {}, jumpPressed = false, spaceKeyDown = false;
-        let deathBlocks = [];
-        let walkTime = 0;
-        let joystickActive = false;
-        let joystickVector = { x: 0, y: 0 };
-        let jumpButtonPressed = false;
-        let cameraTouchActive = false;
-        let lastTouchX = 0, lastTouchY = 0;
-
-        // ==================== ФУНКЦИИ ВХОДА/РЕГИСТРАЦИИ ====================
-        // (Полностью скопированы из исходного кода, здесь представлены ключевые)
-
-        const namePrefixes = [
-            'Cool', 'Fast', 'Shadow', 'Crazy', 'Neon', 'Space', 'Dark', 'Fire', 'Ice', 'Star',
-            'Wolf', 'Dragon', 'Phoenix', 'Thunder', 'Storm', 'Blaze', 'Ghost', 'Hunter', 'Knight', 'Ninja',
-            'Panda', 'Tiger', 'Eagle', 'Falcon', 'Raven', 'Owl', 'Lion', 'Bear', 'Shark', 'Whale',
-            'Быстрый', 'Смелый', 'Тёмный', 'Яркий', 'Космический', 'Огненный', 'Ледяной', 'Звёздный',
-            'Волк', 'Дракон', 'Феникс', 'Гром', 'Буря', 'Пламя', 'Призрак', 'Охотник', 'Рыцарь', 'Ниндзя',
-            'Панда', 'Тигр', 'Орёл', 'Сокол', 'Ворон', 'Сова', 'Лев', 'Медведь', 'Акула', 'Кит'
-        ];
-        const nameSuffixes = [
-            'Player', 'Gamer', 'Master', 'Pro', 'King', 'Queen', 'Lord', 'Warrior', 'Killer', 'Hero',
-            'Игрок', 'Мастер', 'Король', 'Королева', 'Властелин', 'Воин', 'Убийца', 'Герой'
-        ];
-
-        function nickToEmail(nick) {
-            return nick.trim().toLowerCase().replace(/\s+/g, '') + '@yourblocks-ccdb7.firebaseapp.com';
-        }
-
-        async function isUsernameFree(username) {
-            if (!username) return false;
-            const snapshot = await db.collection('users').where('username', '==', username).get();
-            return snapshot.empty;
-        }
-
-        function generateRandomUsername() {
-            // ... (полная реализация есть в исходном коде)
-            return 'Player' + Math.floor(Math.random() * 1000);
-        }
-
-        async function getFreeUsernames(count = 3) {
-            const freeNames = [];
-            for (let i = 0; i < 30 && freeNames.length < count; i++) {
-                const candidate = generateRandomUsername();
-                if (await isUsernameFree(candidate)) freeNames.push(candidate);
-            }
-            return freeNames;
-        }
-
-        async function refreshSuggestions() {
-            const container = document.getElementById('suggested-usernames');
-            if (!container) return;
-            container.innerHTML = '';
-            const freeNames = await getFreeUsernames(3);
-            freeNames.forEach(name => {
-                const span = document.createElement('span');
-                span.className = 'suggested-name';
-                span.textContent = name;
-                span.onclick = () => {
-                    document.getElementById('register-username').value = name;
-                };
-                container.appendChild(span);
-            });
-        }
-
-        function switchLoginTab(tab) {
-            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
-            document.getElementById(tab + '-form').classList.add('active');
-            if (tab === 'register') refreshSuggestions();
-        }
-
-        function isUserBanned(userDoc) {
-            if (userDoc.bannedUntil && userDoc.bannedUntil > Date.now()) {
-                return { banned: true, reason: userDoc.banReason, until: userDoc.bannedUntil };
-            }
-            return { banned: false };
-        }
-
-        async function handleLogin() {
-            // ... (полная реализация)
-        }
-
-        async function handleRegister() {
-            // ... (полная реализация)
-        }
-
-        function handleGuest() {
-            currentUser = {
-                username: 'Гость_' + Math.floor(Math.random() * 10000),
-                level: 1,
-                games: 0,
-                isGuest: true,
-                colors: playerColors,
-                role: 'guest'
-            };
-            loginSuccess();
-        }
-
-        function loginSuccess() {
-            document.getElementById('sidebar-username').textContent = currentUser.username;
-            document.getElementById('profile-username').textContent = currentUser.username;
-            if (currentUser.isGuest) {
-                document.getElementById('sidebar-status').innerHTML = '👤 <span>Гость</span>';
-            } else {
-                document.getElementById('sidebar-status').innerHTML = (currentUser.level || 1) + ' <span>Близкий</span>';
-                document.getElementById('profile-friends-count').textContent = currentUser.friends ? Object.keys(currentUser.friends).length : 0;
-            }
-            if (currentUser.role === 'admin') {
-                document.getElementById('admin-nav-item').style.display = 'flex';
-            } else {
-                document.getElementById('admin-nav-item').style.display = 'none';
-            }
-            document.getElementById('login-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('menu-container').style.display = 'flex';
-            }, 500);
-        }
-
-        async function logout() {
-            if (sessionListener) sessionListener();
-            if (!currentUser?.isGuest && currentUser?.uid) {
-                if (currentUser.colors) currentUser.colors = playerColors;
-                try {
-                    await db.collection('users').doc(currentUser.uid).update({ colors: playerColors });
-                } catch (e) { console.error('Ошибка сохранения при выходе:', e); }
-            }
-            await auth.signOut();
-            currentUser = null;
-            document.getElementById('menu-container').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('login-screen').style.opacity = '1';
-            document.getElementById('login-username').value = '';
-            document.getElementById('login-password').value = '';
-            document.getElementById('register-username').value = '';
-            document.getElementById('register-password').value = '';
-            document.getElementById('register-confirm').value = '';
-        }
-
-        // ==================== САМОУДАЛЕНИЕ АККАУНТА ====================
-        async function deleteAccount() {
-            if (!currentUser) return;
-            if (currentUser.isGuest) {
-                alert('Гости не могут удалить аккаунт. Просто выйдите.');
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const imageContainer = document.getElementById('imageContainer');
+        const loadingText = document.getElementById('loadingText');
+        
+        // Функция загрузки изображения по промпту
+        function generateImage(prompt) {
+            if (!prompt.trim()) {
+                alert('Пожалуйста, введите описание');
                 return;
             }
-            if (confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо.')) {
-                try {
-                    const user = auth.currentUser;
-                    if (!user) throw new Error('Нет активного пользователя');
-
-                    // Удаляем документ из Firestore
-                    await db.collection('users').doc(currentUser.uid).delete();
-                    // Удаляем сам аккаунт Firebase Auth
-                    await user.delete();
-
-                    logout();
-                } catch (error) {
-                    console.error('Ошибка при удалении:', error);
-                    alert('Ошибка при удалении: ' + error.message);
-                }
-            }
-        }
-
-        // ==================== ФУНКЦИИ АДМИНКИ ====================
-        async function loadAdminPanel() {
-            const panel = document.getElementById('admin-panel');
-            panel.innerHTML = '<p>Загрузка пользователей...</p>';
-            try {
-                const snapshot = await db.collection('users').limit(50).get();
-                let html = '<table style="width:100%; color: #fff; border-collapse: collapse;">';
-                html += '<tr><th>Ник</th><th>Роль</th><th>Статус</th><th>Действия</th></tr>';
-                snapshot.forEach(doc => {
-                    const userData = doc.data();
-                    const userId = doc.id;
-                    const banInfo = isUserBanned(userData);
-                    const status = banInfo.banned ? `Забанен до ${new Date(banInfo.until).toLocaleString()}<br>Причина: ${banInfo.reason}` : 'Активен';
-                    html += `<tr style="border-bottom: 1px solid #333;">
-                        <td style="padding: 10px;">${userData.username || 'Без имени'}</td>
-                        <td style="padding: 10px;">${userData.role || 'user'}</td>
-                        <td style="padding: 10px;">${status}</td>
-                        <td style="padding: 10px;">
-                            <button onclick="banUser('${userId}', '${userData.username}')">🔨 Бан</button>
-                            <button onclick="unbanUser('${userId}')">✅ Разбан</button>
-                            <button onclick="deleteUserAccount('${userId}')">❌ Удалить</button>
-                            <button onclick="setRole('${userId}', 'admin')">👑 Сделать админом</button>
-                            <button onclick="setRole('${userId}', 'user')">👤 Убрать админку</button>
-                        </td>
-                    </tr>`;
-                });
-                html += '</table>';
-                panel.innerHTML = html;
-            } catch (e) {
-                panel.innerHTML = '<p style="color:red;">Ошибка загрузки пользователей</p>';
-                console.error(e);
-            }
-        }
-
-        async function banUser(userId, username) {
-            const reason = prompt(`Введите причину бана для ${username}:`);
-            if (reason === null) return;
-            const minutes = prompt('Введите длительность бана в минутах (0 = навсегда):');
-            if (minutes === null) return;
-            let bannedUntil = minutes === '0' ? Infinity : Date.now() + parseInt(minutes) * 60000;
-            if (minutes === '0') bannedUntil = 9e15;
-            try {
-                await db.collection('users').doc(userId).update({ bannedUntil, banReason: reason });
-                alert('Пользователь забанен');
-                loadAdminPanel();
-            } catch (e) {
-                alert('Ошибка: ' + e.message);
-            }
-        }
-
-        async function unbanUser(userId) {
-            try {
-                await db.collection('users').doc(userId).update({
-                    bannedUntil: firebase.firestore.FieldValue.delete(),
-                    banReason: firebase.firestore.FieldValue.delete()
-                });
-                alert('Бан снят');
-                loadAdminPanel();
-            } catch (e) {
-                alert('Ошибка: ' + e.message);
-            }
-        }
-
-        async function setRole(userId, role) {
-            try {
-                await db.collection('users').doc(userId).update({ role });
-                alert(`Роль изменена на ${role}`);
-                loadAdminPanel();
-            } catch (e) {
-                alert('Ошибка: ' + e.message);
-            }
-        }
-
-        // ==================== УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ АДМИНОМ (ЧЕРЕЗ ОБЛАЧНУЮ ФУНКЦИЮ) ====================
-        async function deleteUserAccount(userId) {
-            if (!confirm('Вы уверены, что хотите полностью удалить этого пользователя? Это действие необратимо.')) return;
-
-            if (!currentUser || currentUser.role !== 'admin') {
-                alert('Недостаточно прав для удаления.');
-                return;
-            }
-
-            try {
-                const deleteUserFunction = functions.httpsCallable('deleteUserCompletely');
-                const result = await deleteUserFunction({ userId: userId });
-
-                if (result.data.success) {
-                    alert('Пользователь полностью удалён (Firestore + Authentication).');
-                    loadAdminPanel();
-                } else {
-                    alert('Ошибка: ' + (result.data.error || 'Неизвестная ошибка'));
-                }
-            } catch (error) {
-                console.error('Ошибка при вызове функции удаления:', error);
-                alert('Не удалось удалить пользователя: ' + error.message);
-            }
-        }
-
-        // ==================== ОСТАЛЬНЫЕ ФУНКЦИИ (игровые, мультиплеер, админ-режимы) ====================
-        // (Здесь должны быть все функции из исходного кода: switchPage, selectGame, startGame, exitGame,
-        //  initMultiplayer, handleConnection, sendMyInfo, handleData, broadcastPosition, removeOtherPlayer,
-        //  updatePlayersCount, createMultiplayerModel, manualConnect, initThreeJSGame, animatePlayer,
-        //  createCustomPlayerModel, isOnGround, toggleAdminGameMenu, toggleAdminMode, и т.д.
-        //  Для краткости они опущены, но в реальном файле они должны быть полностью скопированы из исходника.)
-
-        // В целях экономии места здесь приведены только ключевые функции удаления.
-        // Полный исходный код игры доступен в предыдущих ответах.
-        // При копировании в реальный проект необходимо вставить все игровые функции без изменений.
-
-        function switchPage(page) {
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            const titles = {
-                'home': 'Главная страница',
-                'profile': 'Профиль',
-                'avatar': 'Аватар',
-                'settings': 'Настройки',
-                'friends': 'Друзья',
-                'admin': 'Админ панель'
+            
+            // Очищаем контейнер и показываем загрузку
+            imageContainer.innerHTML = '<div class="loading">⏳ Генерируем изображение, подождите...</div>';
+            
+            // Кодируем промпт для URL
+            const encodedPrompt = encodeURIComponent(prompt);
+            // Используем API Pollinations (без ключа)
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=768&height=512&nologo=true&model=stable-diffusion`;
+            
+            // Создаём элемент img
+            const img = new Image();
+            img.onload = function() {
+                // Убираем загрузку и показываем картинку
+                imageContainer.innerHTML = '';
+                imageContainer.appendChild(img);
             };
-            document.getElementById('page-title').textContent = titles[page];
-            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
-            document.getElementById(page + '-section').classList.add('active');
-            if (page === 'admin') loadAdminPanel();
+            img.onerror = function() {
+                imageContainer.innerHTML = '<div class="loading" style="color: #e74c3c;">❌ Ошибка загрузки. Попробуйте другой запрос или повторите позже.</div>';
+            };
+            img.src = imageUrl;
+            img.alt = prompt;
         }
-
-        function selectGame() {
-            document.querySelector('.game-card-large').classList.add('selected');
-        }
-
-        // Заглушки для игровых функций (реальные должны быть взяты из исходного кода)
-        function startGame() { alert('Игра запущена (заглушка)'); }
-        function exitGame() {}
-        function toggleAdminGameMenu() {}
-        function toggleAdminMode(mode) {}
-        function setPartColor(part, color, element) {
-            playerColors[part] = color;
-            const parentPicker = element.parentNode;
-            Array.from(parentPicker.children).forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-            updateAllAvatars();
-            if (currentUser && !currentUser.isGuest && currentUser.uid) {
-                db.collection('users').doc(currentUser.uid).update({ colors: playerColors })
-                    .catch(error => {
-                        console.error('Ошибка сохранения цвета:', error);
-                        if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.message.includes('permission')) {
-                            alert('Сессия истекла. Пожалуйста, войдите снова.');
-                            logout();
-                        }
-                    });
+        
+        // Обработчик кнопки
+        generateBtn.addEventListener('click', () => {
+            generateImage(promptInput.value);
+        });
+        
+        // Обработчик Enter в поле ввода
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateImage(promptInput.value);
             }
-        }
-
-        function updateAllAvatars() {
-            const avatars = document.querySelectorAll('#sidebar-avatar, #profile-avatar, #customize-avatar');
-            avatars.forEach(avatar => {
-                avatar.style.backgroundColor = playerColors.body;
-                avatar.style.color = 'white';
+        });
+        
+        // Обработчики примеров
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const examplePrompt = btn.textContent;
+                promptInput.value = examplePrompt;
+                generateImage(examplePrompt);
             });
-        }
-
+        });
+        
+        // При загрузке страницы генерируем картинку по умолчанию
         window.addEventListener('load', () => {
-            if (document.getElementById('register-form').classList.contains('active')) {
-                refreshSuggestions();
-            }
+            // Можно сразу показать пример, но лучше дать пользователю самому нажать
+            // Но для демо сгенерируем сразу
+            // generateImage(promptInput.value);
+        });
+        
+        // Простой disclaimer
+        document.getElementById('disclaimerLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Это демонстрационный скрипт, использующий открытое API Pollinations.ai. Все изображения генерируются нейросетью Stable Diffusion на удалённых серверах и могут не соответствовать реальным сайтам.');
         });
     </script>
 </body>
