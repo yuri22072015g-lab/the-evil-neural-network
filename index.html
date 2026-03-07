@@ -1,1206 +1,852 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Генератор видео — мега-ландшафт + скачивание</title>
-  <style>
-    /* Стили без изменений (компактно) */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background: #0b1120; color: #e2e8f0; padding: 16px; }
-    .app-container { max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-    h1 { text-align: center; background: linear-gradient(135deg, #f97316, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .subhead { text-align: center; color: #94a3b8; }
-    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
-    .card { background: #1e293b; border-radius: 28px; padding: 22px; border: 1px solid #334155; box-shadow: 0 20px 30px -10px #00000080; }
-    .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 18px; color: #b0c4de; }
-    .prompt-container { display: flex; gap: 12px; }
-    .prompt-area { flex: 1; padding: 16px; border-radius: 20px; border: 2px solid #334155; background: #0f172a; color: white; resize: vertical; font-size: 1rem; }
-    .voice-btn { background: #2d3b4f; border: none; border-radius: 50%; width: 54px; height: 54px; font-size: 24px; color: white; cursor: pointer; }
-    .voice-btn.active { background: #a855f7; }
-    .char-counter { text-align: right; color: #94a3b8; margin: 6px 0; }
-    .wind-panel { background: #0f172a; border-radius: 24px; padding: 16px; margin: 12px 0; }
-    .wind-title { display: flex; align-items: center; gap: 12px; color: #fbbf24; }
-    .wind-slider { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .wind-slider label { width: 80px; }
-    .wind-slider input { flex: 1; }
-    .wind-value { min-width: 60px; text-align: right; color: #fbbf24; }
-    .wind-arrow { font-size: 28px; display: inline-block; transition: transform 0.1s; }
-    .settings-group { display: flex; flex-direction: column; gap: 16px; }
-    .resolution-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .radio-option { background: #2d3b4f; padding: 8px 18px; border-radius: 40px; cursor: pointer; }
-    .radio-option.selected { background: #2563eb; color: white; }
-    .radio-option input { display: none; }
-    .slider-row { display: flex; flex-direction: column; gap: 6px; }
-    .slider-row input { width: 100%; }
-    .duration-value { background: #2563eb; padding: 4px 14px; border-radius: 30px; align-self: flex-start; }
-    .fps-select { background: #2d3b4f; color: white; padding: 8px; border-radius: 12px; border: 1px solid #4b5563; }
-    .generate-btn { width: 100%; background: linear-gradient(145deg, #f97316, #c2410c); border: none; color: white; font-size: 1.3rem; font-weight: 600; padding: 16px; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 20px #7b341e80; }
-    .status-area { background: #0f172a; border-radius: 60px; padding: 6px; margin-top: 16px; }
-    .progress-bar-bg { background: #334155; height: 18px; border-radius: 60px; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 60px; }
-    .status-message { text-align: center; margin-top: 6px; color: #94a3b8; }
-    .video-container { background: #000; border-radius: 24px; overflow: hidden; aspect-ratio: 16/9; border: 2px solid #334155; }
-    video { width: 100%; height: 100%; display: block; }
-    .action-buttons { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-    .secondary-btn { background: #2d3b4f; border: 1px solid #4b5563; padding: 12px 20px; border-radius: 40px; color: white; cursor: pointer; flex: 1; text-align: center; }
-    .secondary-btn.green { background: #16a34a; border-color: #22c55e; }
-    .search-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 16px 0; }
-    .search-item { aspect-ratio: 16/9; background: #2d3b4f; border-radius: 12px; overflow: hidden; cursor: pointer; }
-    .search-item img { width: 100%; height: 100%; object-fit: cover; }
-    .assistant-message { background: #0f172a; border-radius: 20px; padding: 16px; border-left: 6px solid #a855f7; max-height: 180px; overflow-y: auto; }
-    .chat-input-area { display: flex; gap: 10px; margin-top: 16px; }
-    .chat-input { flex: 1; padding: 14px; border-radius: 40px; border: 2px solid #334155; background: #0f172a; color: white; }
-    .chat-send { background: #a855f7; border: none; color: white; padding: 0 24px; border-radius: 40px; font-weight: 600; cursor: pointer; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .gallery-item { aspect-ratio: 16/9; background: #2d3b4f; border-radius: 12px; overflow: hidden; cursor: pointer; }
-    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-    .modal { display: none; position: fixed; inset: 0; background: #000000cc; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-    .modal.active { display: flex; }
-    .modal-content { background: #1e293b; max-width: 700px; width: 90%; border-radius: 32px; padding: 24px; }
-    .modal-video { width: 100%; border-radius: 16px; }
-    .modal-actions { display: flex; justify-content: space-between; margin-top: 20px; }
-    .close-modal { background: #475569; border: none; padding: 12px 24px; border-radius: 40px; color: white; cursor: pointer; }
-    footer { text-align: center; color: #64748b; margin-top: 20px; border-top: 1px solid #334155; padding-top: 20px; }
-    .insert-prompt-btn { background: #2563eb; border: none; color: white; padding: 4px 12px; border-radius: 30px; font-size: 0.9rem; cursor: pointer; margin-left: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Две игры: кирки и примеры</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #b0e0ff 0%, #4da6ff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            background: rgba(15,15,15,0.85);
+            backdrop-filter: blur(6px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: 1px solid #3f3f3f;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .tab.active {
+            background: #3ea6ff;
+            color: black;
+            border-color: #3ea6ff;
+        }
+        .tab.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .top-panel {
+            background: rgba(15,15,15,0.85);
+            backdrop-filter: blur(6px);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+            color: white;
+            border: 1px solid #3f3f3f;
+        }
+        .balance {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd966;
+        }
+        .remaining {
+            font-size: 20px;
+            color: #7cfc00;
+        }
+        .wave-info {
+            font-size: 20px;
+            color: #3ea6ff;
+        }
+        .bet-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bet-area input {
+            background: #272727;
+            border: 1px solid #3f3f3f;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 120px;
+            font-size: 16px;
+        }
+        button {
+            background: #3ea6ff;
+            color: black;
+            font-weight: bold;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #6cb8ff;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .message {
+            font-size: 18px;
+            color: white;
+            margin-left: auto;
+        }
+        .game-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+        }
+        /* Игра 1 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 60px);
+            grid-template-rows: repeat(10, 60px);
+            gap: 3px;
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 16px;
+            border: 2px solid #5a5a5a;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+        }
+        .cell {
+            background: #5c5c5c;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 0 #00000080;
+            box-shadow: inset 0 -2px 0 #2e2e2e, inset 0 2px 0 #8f8f8f;
+            position: relative;
+        }
+        .cell.block.iron { background: #c0c0c0; }
+        .cell.block.diamond { background: #b9f2ff; }
+        .cell.block.netherite { background: #4c4c4c; }
+        .cell.chest { background: #8B4513; }
+        .cell.pickaxe.material-wood { background: #8B5A2B; }
+        .cell.pickaxe.material-stone { background: #808080; }
+        .cell.pickaxe.material-iron { background: #C0C0C0; }
+        .cell.pickaxe.material-diamond { background: #B9F2FF; }
+        .cell.pickaxe.material-netherite { background: #4C4C4C; }
+        .cell.dynamite { background: #ff4444; }
+        .hp-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 0 2px;
+            border-radius: 4px;
+        }
+        .pickaxe-label, .dynamite-label, .chest-label {
+            position: absolute;
+            bottom: 2px;
+            left: 4px;
+            font-size: 11px;
+            background: rgba(0,0,0,0.6);
+            padding: 0 3px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .block-label {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 11px;
+            background: rgba(0,0,0,0.6);
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        /* Игра 2 */
+        .game2-panel {
+            background: rgba(15,15,15,0.9);
+            backdrop-filter: blur(6px);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            border: 2px solid #3ea6ff;
+            max-width: 600px;
+            width: 100%;
+        }
+        .problem {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #5a5a5a;
+            width: 100%;
+            text-align: center;
+        }
+        .difficulty-badge {
+            font-size: 18px;
+            padding: 5px 15px;
+            border-radius: 30px;
+            background: #3ea6ff;
+            color: black;
+            font-weight: bold;
+        }
+        .answer-area {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+        .answer-area input {
+            background: #272727;
+            border: 1px solid #3f3f3f;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            width: 200px;
+            font-size: 24px;
+            text-align: center;
+        }
+        .game2-buttons {
+            display: flex;
+            gap: 20px;
+        }
+        .game2-message {
+            font-size: 20px;
+            color: #ffd966;
+            min-height: 40px;
+        }
+        .bottom-bar {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(15,15,15,0.85);
+            backdrop-filter: blur(6px);
+            border-radius: 16px;
+            color: #ccc;
+            text-align: center;
+            border: 1px solid #3f3f3f;
+        }
+        @media (max-width: 700px) {
+            .grid { grid-template-columns: repeat(10, 45px); grid-template-rows: repeat(10, 45px); }
+            .cell { font-size: 24px; }
+        }
+    </style>
 </head>
 <body>
-<div class="app-container">
-  <h1>🏰 Огромные дома + озеро + скачивание видео</h1>
-  <div class="subhead">Нейросеть составляет промпты, видео до 60 секунд, реальное скачивание</div>
-
-  <div class="main-grid">
-    <!-- Левая колонка -->
-    <div>
-      <section class="card">
-        <div class="card-title">📝 Опишите сцену</div>
-        <div class="prompt-container">
-          <textarea id="promptInput" class="prompt-area" maxlength="5000">горы, озеро, большой замок, деревянный мост, цветущий сад, старая мельница, песчаные дюны, пальмы, руины храма, костёр, скамейка, фонарь, колодец, лодка на озере, красный дракон летит вверху, человек бежит слева</textarea>
-          <button id="voiceBtn" class="voice-btn">🎤</button>
-        </div>
-        <div class="char-counter">Осталось <span id="charCount">5000</span></div>
-        <div style="display:flex; gap:10px; margin:16px 0">
-          <button id="searchWebBtn" class="secondary-btn">🌐 Референсы</button>
-          <button id="clearSearchBtn" class="secondary-btn">✕ Очистить</button>
-        </div>
-        <div id="searchResults" class="search-grid"></div>
-        <p id="searchStatus" style="color:#94a3b8; text-align:center;">Нажмите для поиска</p>
-      </section>
-
-      <section class="card">
-        <div class="card-title">💨 Ветер</div>
-        <div class="wind-panel">
-          <div class="wind-title"><span class="wind-arrow" id="windArrow">⬇️</span> <span>Направление и сила</span></div>
-          <div class="wind-slider"><label>Направл.</label><input type="range" id="windDir" min="0" max="360" value="90" step="1"><span id="windDirVal" class="wind-value">90°</span></div>
-          <div class="wind-slider"><label>Сила</label><input type="range" id="windSpeed" min="0" max="2.5" value="1.2" step="0.1"><span id="windSpeedVal" class="wind-value">1.2</span></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-title">⚙️ Настройки (макс. 60 сек)</div>
-        <div class="settings-group">
-          <div class="resolution-row">
-            <label class="radio-option selected"><input type="radio" name="resolution" value="480p" checked> 480p</label>
-            <label class="radio-option"><input type="radio" name="resolution" value="720p"> 720p</label>
-            <label class="radio-option"><input type="radio" name="resolution" value="1080p"> 1080p</label>
-          </div>
-          <div class="slider-row">
-            <label>Длительность: <span id="durationDisplay" class="duration-value">30 с</span></label>
-            <input type="range" id="durationSlider" min="5" max="60" step="5" value="30">
-          </div>
-          <div>
-            <label>FPS:</label>
-            <select id="fpsSelect" class="fps-select">
-              <option>24</option><option>25</option><option selected>30</option><option>60</option>
-            </select>
-          </div>
-          <label><input type="checkbox" id="enhancedCheck" checked> Улучшенная анимация</label>
-        </div>
-      </section>
-
-      <section class="card">
-        <button id="generateBtn" class="generate-btn">✨ Сгенерировать видео</button>
-        <div class="status-area">
-          <div class="progress-bar-bg"><div id="progressFill" class="progress-fill"></div></div>
-          <div id="statusMessage" class="status-message">⏳ Ожидание</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="video-container">
-          <video id="videoPreview" controls autoplay muted playsinline poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225'%3E%3Crect width='400' height='225' fill='%232d3b4f'/%3E%3Ctext x='200' y='120' fill='%23ffffff' text-anchor='middle' font-size='16'%3EОблака плывут%3C/text%3E%3C/svg%3E"></video>
-        </div>
-        <div class="action-buttons">
-          <button id="downloadBtn" class="secondary-btn" disabled>📥 Скачать видео</button>
-          <button id="saveToGalleryBtn" class="secondary-btn" disabled>💾 В галерею</button>
-          <button id="resetBtn" class="secondary-btn green">🔄 Сброс</button>
-        </div>
-      </section>
+    <div class="tabs" id="tabs">
+        <div class="tab active" data-game="game1">⛏️ Кирки и динамит</div>
+        <div class="tab" data-game="game2">🧮 Трудные примеры</div>
     </div>
 
-    <!-- Правая колонка -->
-    <div>
-      <section class="card">
-        <div class="card-title">🤖 Нейросеть-ассистент</div>
-        <div id="assistantMessages" class="assistant-message">
-          <p>👋 Опишите сцену словами, я создам промпт.</p>
-          <p><em>Например: «замок у озера, дракон, человек»</em></p>
+    <div class="top-panel">
+        <div class="balance">💰 Баланс: <span id="balanceDisplay">500</span></div>
+        <div class="remaining" id="remainingContainer">💎 Осталось ставки: <span id="remainingDisplay">0</span></div>
+        <div class="wave-info" id="waveContainer">🌊 Волна: <span id="waveDisplay">0/4</span></div>
+        <div class="bet-area" id="betArea">
+            <label>Ставка:</label>
+            <input type="number" id="betInput" min="1" value="500">
+            <button id="startBtn">Начать игру</button>
         </div>
-        <div class="chat-input-area">
-          <input type="text" id="chatInput" class="chat-input" placeholder="Запрос...">
-          <button id="chatSendBtn" class="chat-send">➤</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <div class="game-container">
+        <!-- Игра 1: кирки -->
+        <div id="game1" style="display: flex;">
+            <div id="grid" class="grid"></div>
         </div>
-      </section>
 
-      <section class="card">
-        <div class="card-title">🖼️ Галерея</div>
-        <div id="galleryContainer" class="gallery-grid"></div>
-        <p style="color:#94a3b8; margin-top:12px;">Кликните для просмотра</p>
-      </section>
+        <!-- Игра 2: примеры (скрыта) -->
+        <div id="game2" style="display: none; width: 100%; justify-content: center;">
+            <div class="game2-panel">
+                <div class="difficulty-badge" id="difficultyBadge">Средняя</div>
+                <div class="problem" id="problem">2 + 2</div>
+                <div class="answer-area">
+                    <input type="number" id="answerInput" placeholder="Ответ">
+                </div>
+                <div class="game2-buttons">
+                    <button id="checkBtn">Проверить</button>
+                    <button id="newProblemBtn">Новый пример</button>
+                </div>
+                <div class="game2-message" id="game2Message"></div>
+            </div>
+        </div>
     </div>
-  </div>
-  <footer>Макс. 60 секунд · Реальное скачивание · Мега-ландшафт</footer>
-</div>
 
-<!-- Модалка -->
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <video id="modalVideo" class="modal-video" controls></video>
-    <div class="modal-actions">
-      <button id="modalDownloadBtn" class="secondary-btn">⬇ Скачать</button>
-      <button id="modalCloseBtn" class="close-modal">✕ Закрыть</button>
+    <div class="bottom-bar" id="infoBar">
+        ⚙️ Активация Windows Чтобы активировать Windows, перейдите в раздел "Параметры". 🚀 Навигатор
     </div>
-  </div>
-</div>
 
-<script>
-(function() {
-  // --- DOM ---
-  const promptInput = document.getElementById('promptInput');
-  const charSpan = document.getElementById('charCount');
-  const durationSlider = document.getElementById('durationSlider');
-  const durationDisplay = document.getElementById('durationDisplay');
-  const generateBtn = document.getElementById('generateBtn');
-  const progressFill = document.getElementById('progressFill');
-  const statusMsg = document.getElementById('statusMessage');
-  const videoPreview = document.getElementById('videoPreview');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const saveToGalleryBtn = document.getElementById('saveToGalleryBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const galleryContainer = document.getElementById('galleryContainer');
-  const modal = document.getElementById('modal');
-  const modalVideo = document.getElementById('modalVideo');
-  const modalDownloadBtn = document.getElementById('modalDownloadBtn');
-  const modalCloseBtn = document.getElementById('modalCloseBtn');
-  const searchWebBtn = document.getElementById('searchWebBtn');
-  const clearSearchBtn = document.getElementById('clearSearchBtn');
-  const searchResultsDiv = document.getElementById('searchResults');
-  const searchStatus = document.getElementById('searchStatus');
-  const assistantMessages = document.getElementById('assistantMessages');
-  const chatInput = document.getElementById('chatInput');
-  const chatSendBtn = document.getElementById('chatSendBtn');
-  const voiceBtn = document.getElementById('voiceBtn');
-  const windDir = document.getElementById('windDir');
-  const windSpeed = document.getElementById('windSpeed');
-  const windDirVal = document.getElementById('windDirVal');
-  const windSpeedVal = document.getElementById('windSpeedVal');
-  const windArrow = document.getElementById('windArrow');
+    <script>
+        (function() {
+            // ---------- Константы ----------
+            const COLS = 10;
+            const ROWS = 10;
+            const MAX_WAVES = 4;                // 4 волны
+            const BLOCK_COST = 15;               // стоимость сломанного блока
+            const START_BALANCE = 500;
 
-  // --- Ветер ---
-  let wind = { dir: 90, speed: 1.2 };
-  windDir.addEventListener('input', () => {
-    wind.dir = parseInt(windDir.value);
-    windDirVal.innerText = wind.dir + '°';
-    windArrow.style.transform = `rotate(${wind.dir}deg)`;
-  });
-  windSpeed.addEventListener('input', () => {
-    wind.speed = parseFloat(windSpeed.value);
-    windSpeedVal.innerText = wind.speed.toFixed(1);
-  });
+            // Типы блоков
+            const BLOCK_TYPES = [
+                { name: 'Ж', class: 'iron', hp: 6 },
+                { name: 'А', class: 'diamond', hp: 10 },
+                { name: 'Н', class: 'netherite', hp: 15 }
+            ];
 
-  // --- Голос ---
-  voiceBtn.addEventListener('click', () => alert('Голосовой ввод: скажите "ветер сильнее" или "пусть красный дракон летит"'));
+            // Типы кирок
+            const MATERIALS = [
+                { name: 'Д', damage: 1, class: 'material-wood', weight: 40, maxUses: 1 },
+                { name: 'К', damage: 2, class: 'material-stone', weight: 25, maxUses: 1 },
+                { name: 'Ж', damage: 3, class: 'material-iron', weight: 15, maxUses: 1 },
+                { name: 'А', damage: 4, class: 'material-diamond', weight: 12, maxUses: 2 },
+                { name: 'Н', damage: 5, class: 'material-netherite', weight: 8, maxUses: 2 }
+            ];
 
-  // --- Референсы ---
-  searchWebBtn.addEventListener('click', () => {
-    searchStatus.innerText = 'Поиск...';
-    const demo = ['https://images.pexels.com/photos/417173/pexels-photo-417173.jpeg?auto=compress&cs=tinysrgb&w=200',
-                  'https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg?auto=compress&cs=tinysrgb&w=200',
-                  'https://images.pexels.com/photos/1648777/pexels-photo-1648777.jpeg?auto=compress&cs=tinysrgb&w=200',
-                  'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?auto=compress&cs=tinysrgb&w=200'];
-    searchResultsDiv.innerHTML = demo.map(u => `<div class="search-item"><img src="${u}"></div>`).join('');
-    searchStatus.innerText = 'Найдено 4 изображения';
-  });
-  clearSearchBtn.addEventListener('click', () => { searchResultsDiv.innerHTML = ''; searchStatus.innerText = 'Очищено'; });
+            // Награды за примеры
+            const REWARDS = { easy: 5, medium: 10, hard: 20 };
 
-  // --- Счётчик ---
-  promptInput.addEventListener('input', () => {
-    charSpan.innerText = 5000 - promptInput.value.length;
-  });
-  durationSlider.addEventListener('input', () => {
-    durationDisplay.innerText = durationSlider.value + ' с';
-  });
+            // ---------- Состояние ----------
+            let balance = START_BALANCE;
+            let remainingBet = 0;
+            let currentWaveId = -1;
+            let waveWaiting = false;
+            let activeObjects = 0;
+            let gameActive = false;
+            let chests = [];
+            let grid = [];
 
-  // --- Радио-кнопки ---
-  document.querySelectorAll('.radio-option').forEach(opt => {
-    opt.addEventListener('click', function() {
-      document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
-      this.classList.add('selected');
-      this.querySelector('input').checked = true;
-    });
-  });
+            let currentProblem = { text: '2 + 2', answer: 4, difficulty: 'easy' };
 
-  // --- Состояние генерации и записи ---
-  let isGenerating = false;
-  let isRecording = false;
-  let genInterval = null;
-  let progress = 0;
-  let canvasStream = null;
-  let animFrame = null;
-  let offCanvas = null;
-  let mediaRecorder = null;
-  let recordedChunks = [];
+            // DOM элементы
+            const balanceSpan = document.getElementById('balanceDisplay');
+            const remainingSpan = document.getElementById('remainingDisplay');
+            const remainingContainer = document.getElementById('remainingContainer');
+            const waveSpan = document.getElementById('waveDisplay');
+            const waveContainer = document.getElementById('waveContainer');
+            const betInput = document.getElementById('betInput');
+            const startBtn = document.getElementById('startBtn');
+            const messageDiv = document.getElementById('message');
+            const infoBar = document.getElementById('infoBar');
+            const gridDiv = document.getElementById('grid');
+            const game1Div = document.getElementById('game1');
+            const game2Div = document.getElementById('game2');
+            const problemDiv = document.getElementById('problem');
+            const difficultyBadge = document.getElementById('difficultyBadge');
+            const answerInput = document.getElementById('answerInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const newProblemBtn = document.getElementById('newProblemBtn');
+            const game2Message = document.getElementById('game2Message');
+            const tabs = document.querySelectorAll('.tab');
+            const betArea = document.getElementById('betArea');
 
-  function stopVideo() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
-    if (canvasStream) {
-      canvasStream.getTracks().forEach(t => t.stop());
-      canvasStream = null;
-    }
-    if (animFrame) cancelAnimationFrame(animFrame);
-    videoPreview.srcObject = null;
-  }
+            let currentGame = 'game1';
 
-  // --- База персонажей и действий (реалистичные цвета) ---
-  const characterKeywords = {
-    человек: { name: 'человек', defaultAction: 'стоит' },
-    люди: { name: 'человек', defaultAction: 'стоят' },
-    кот: { name: 'кот', defaultAction: 'сидит' },
-    кошка: { name: 'кот', defaultAction: 'сидит' },
-    собака: { name: 'собака', defaultAction: 'стоит' },
-    пёс: { name: 'собака', defaultAction: 'стоит' },
-    птица: { name: 'птица', defaultAction: 'летит' },
-    дракон: { name: 'дракон', defaultAction: 'летит' },
-    робот: { name: 'робот', defaultAction: 'идёт' },
-    лошадь: { name: 'лошадь', defaultAction: 'скачет' },
-    конь: { name: 'лошадь', defaultAction: 'скачет' },
-    обезьяна: { name: 'обезьяна', defaultAction: 'висит' },
-    змея: { name: 'змея', defaultAction: 'ползёт' },
-    рыба: { name: 'рыба', defaultAction: 'плывёт' },
-    пришелец: { name: 'пришелец', defaultAction: 'машет' },
-    единорог: { name: 'единорог', defaultAction: 'прыгает' },
-    // ... остальные можно добавить
-  };
+            // ---------- Загрузка баланса ----------
+            function loadBalance() {
+                const saved = localStorage.getItem('game_balance');
+                if (saved !== null) {
+                    balance = parseInt(saved, 10);
+                    if (isNaN(balance) || balance < 0) balance = START_BALANCE;
+                }
+                updateBalance();
+            }
+            function saveBalance() {
+                localStorage.setItem('game_balance', balance);
+            }
+            function updateBalance() {
+                balanceSpan.textContent = balance;
+            }
 
-  const actionKeywords = {
-    бежит: 'бежит', бегут: 'бежит', летит: 'летит', летят: 'летит', плывёт: 'плывёт', плывут: 'плывёт',
-    прыгает: 'прыгает', прыгают: 'прыгает', сидит: 'сидит', сидят: 'сидит', стоит: 'стоит', стоят: 'стоит',
-    идёт: 'идёт', идут: 'идёт', танцует: 'танцует', танцуют: 'танцует', машет: 'машет', машут: 'машет',
-    ползёт: 'ползёт', ползут: 'ползёт', висит: 'висит', висят: 'висит', скачет: 'скачет', скачут: 'скачет',
-  };
+            // ---------- Инициализация сетки игры 1 ----------
+            function initGrid() {
+                grid = [];
+                chests = [];
+                for (let y = 0; y < ROWS; y++) {
+                    const row = [];
+                    for (let x = 0; x < COLS; x++) {
+                        if (y >= ROWS - 4) {
+                            if (y === ROWS - 1) { // нижний ряд — сундуки
+                                row.push({ type: 'chest' });
+                                chests.push({ x, y });
+                            } else {
+                                const type = BLOCK_TYPES[Math.floor(Math.random() * BLOCK_TYPES.length)];
+                                row.push({ type: 'block', blockType: type, hp: type.hp });
+                            }
+                        } else {
+                            row.push(null);
+                        }
+                    }
+                    grid.push(row);
+                }
+            }
 
-  const positionKeywords = {
-    'слева': 'left', 'левее': 'left',
-    'справа': 'right', 'правее': 'right',
-    'вверху': 'top', 'выше': 'top',
-    'внизу': 'bottom', 'ниже': 'bottom',
-    'в центре': 'center', 'по центру': 'center', 'центр': 'center'
-  };
+            // Отрисовка сетки
+            function renderGrid() {
+                gridDiv.innerHTML = '';
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        const content = grid[y][x];
+                        if (content) {
+                            if (content.type === 'block') {
+                                cell.classList.add('block', content.blockType.class);
+                                cell.textContent = '🪨';
+                                const label = document.createElement('span');
+                                label.className = 'block-label';
+                                label.textContent = content.blockType.name;
+                                cell.appendChild(label);
+                                const hp = document.createElement('span');
+                                hp.className = 'hp-indicator';
+                                hp.textContent = content.hp;
+                                cell.appendChild(hp);
+                            } else if (content.type === 'chest') {
+                                cell.classList.add('chest');
+                                cell.textContent = '🧰';
+                                const label = document.createElement('span');
+                                label.className = 'chest-label';
+                                label.textContent = 'С';
+                                cell.appendChild(label);
+                            } else if (content.type === 'pickaxe') {
+                                cell.classList.add('pickaxe', content.material.class);
+                                cell.textContent = '⛏️';
+                                const label = document.createElement('span');
+                                label.className = 'pickaxe-label';
+                                label.textContent = content.material.name;
+                                cell.appendChild(label);
+                            } else if (content.type === 'dynamite') {
+                                cell.classList.add('dynamite');
+                                cell.textContent = '💣';
+                                const label = document.createElement('span');
+                                label.className = 'dynamite-label';
+                                label.textContent = 'ТНТ';
+                                cell.appendChild(label);
+                            }
+                        }
+                        gridDiv.appendChild(cell);
+                    }
+                }
+            }
 
-  // --- Гигантский словарь ландшафта ---
-  const landscapeCategoryMap = {
-    'река': 'water', 'реки': 'water', 'озеро': 'water', 'пруд': 'water', 'ручей': 'water', 'водопад': 'water', 'море': 'water', 'океан': 'water', 'болото': 'water',
-    'гора': 'mountain', 'горы': 'mountain', 'скала': 'mountain', 'утёс': 'mountain', 'холм': 'mountain', 'вулкан': 'mountain', 'каньон': 'mountain',
-    'дерево': 'tree', 'деревья': 'tree', 'куст': 'tree', 'пальма': 'tree', 'кактус': 'tree', 'гриб': 'tree', 'ель': 'tree', 'сосна': 'tree',
-    'дом': 'building', 'дома': 'building', 'изба': 'building', 'замок': 'building', 'сарай': 'building', 'хижина': 'building', 'юрта': 'building',
-    'башня': 'building', 'церковь': 'building', 'мельница': 'building', 'крепость': 'building', 'маяк': 'building',
-    'дорога': 'road', 'тропа': 'road', 'шоссе': 'road', 'улица': 'road', 'перекрёсток': 'road',
-    'мост': 'bridge', 'виадук': 'bridge',
-    'забор': 'fence', 'изгородь': 'fence',
-    'камень': 'rock', 'камни': 'rock',
-    'песок': 'sand', 'дюна': 'sand', 'пляж': 'sand',
-    'цветок': 'flower', 'цветы': 'flower',
-    'поле': 'field', 'луг': 'field', 'равнина': 'field',
-    'лес': 'forest', 'роща': 'forest', 'тайга': 'forest', 'джунгли': 'forest',
-    'пустыня': 'desert', 'оазис': 'desert',
-    'костёр': 'fire', 'скамейка': 'bench', 'фонарь': 'lamp', 'статуя': 'statue', 'колодец': 'well', 'лодка': 'boat',
-  };
+            // Выбор случайного материала кирки с весом
+            function getRandomMaterial() {
+                const total = MATERIALS.reduce((s, m) => s + m.weight, 0);
+                let r = Math.random() * total;
+                for (let m of MATERIALS) {
+                    if (r < m.weight) return m;
+                    r -= m.weight;
+                }
+                return MATERIALS[0];
+            }
 
-  function getLandscapeCategory(word) {
-    return landscapeCategoryMap[word] || null;
-  }
+            // Спавн новой волны
+            function spawnWave() {
+                if (!gameActive) return;
+                if (currentWaveId >= MAX_WAVES - 1) return;
 
-  // --- Генерация реалистичного цвета для персонажа ---
-  function generateCharacterColor(type) {
-    const colors = {
-      'человек': ['#f5d0a9', '#e0b686', '#c99a6b'],
-      'кот': ['#8B4513', '#A0522D', '#CD853F'],
-      'собака': ['#8B4513', '#A0522D', '#B8860B'],
-      'птица': ['#8B4513', '#A0522D', '#6B8E23'],
-      'дракон': ['#B22222', '#CD5C5C', '#DC143C', '#FF4500'],
-      'робот': ['#C0C0C0', '#A9A9A9', '#808080'],
-      'лошадь': ['#8B4513', '#A0522D', '#DAA520'],
-      'обезьяна': ['#8B4513', '#A0522D', '#4A2C2C'],
-      'змея': ['#2E8B57', '#228B22', '#006400'],
-      'рыба': ['#1E90FF', '#4682B4', '#5F9EA0'],
-      'пришелец': ['#8A2BE2', '#9370DB', '#BA55D3'],
-      'единорог': ['#FFFFFF', '#F5F5F5', '#FFF0F5'],
-    };
-    let palette = colors[type] || ['#A9A9A9'];
-    return palette[Math.floor(Math.random() * palette.length)];
-  }
+                const nextId = currentWaveId + 1;
+                const rows = [0, 1, 2];
+                let spawned = 0;
 
-  // --- Парсинг промпта ---
-  function parsePrompt(prompt) {
-    let p = prompt.toLowerCase();
-    let result = { characters: [], landscape: new Set() };
-    // Персонажи
-    for (let [key, value] of Object.entries(characterKeywords)) {
-      if (p.includes(key)) {
-        let action = value.defaultAction;
-        let position = null;
-        for (let [actKey, actValue] of Object.entries(actionKeywords)) {
-          if (p.includes(actKey) && p.indexOf(actKey) > p.indexOf(key) - 20 && p.indexOf(actKey) < p.indexOf(key) + 20) {
-            action = actValue;
-            break;
-          }
-        }
-        for (let [posKey, posValue] of Object.entries(positionKeywords)) {
-          if (p.includes(posKey) && p.indexOf(posKey) > p.indexOf(key) - 25 && p.indexOf(posKey) < p.indexOf(key) + 25) {
-            position = posValue;
-            break;
-          }
-        }
-        result.characters.push({
-          type: value.name,
-          action: action,
-          position: position,
-          color: generateCharacterColor(value.name),
-          accessory: p.includes('шляп') ? 'hat' : (p.includes('очк') ? 'glasses' : (p.includes('ведр') ? 'bucket' : null))
-        });
-      }
-    }
-    // Ландшафт
-    let words = p.split(/[,\s]+/);
-    for (let w of words) {
-      let cat = getLandscapeCategory(w);
-      if (cat) result.landscape.add(cat);
-    }
-    if (result.landscape.size === 0) {
-      result.landscape.add('field');
-    }
-    if (result.characters.length === 0) {
-      result.characters.push({ type: 'человек', action: 'стоит', position: null, color: '#f5d0a9', accessory: null });
-    }
-    return result;
-  }
+                for (let y of rows) {
+                    for (let x = 0; x < COLS; x++) {
+                        if (grid[y][x] !== null) continue;
+                        const r = Math.random();
+                        if (r < 0.75) { // кирка
+                            const mat = getRandomMaterial();
+                            grid[y][x] = { type: 'pickaxe', material: mat, uses: mat.maxUses, waveId: nextId };
+                            spawned++;
+                        } else if (r < 0.85) { // динамит
+                            grid[y][x] = { type: 'dynamite', waveId: nextId };
+                            spawned++;
+                        }
+                        // иначе пусто
+                    }
+                }
 
-  // --- Нейросеть для генерации промпта (улучшенная группировка) ---
-  function generatePromptFromUserInput(userText) {
-    let text = userText.toLowerCase();
-    let detectedCharacters = [];
-    let detectedLandscape = new Set();
-    let parts = [];
+                if (spawned > 0) {
+                    activeObjects = spawned;
+                    currentWaveId = nextId;
+                    waveWaiting = true;
+                    waveSpan.textContent = (currentWaveId + 1) + '/' + MAX_WAVES;
+                    renderGrid();
 
-    for (let [key, value] of Object.entries(characterKeywords)) {
-      if (text.includes(key)) {
-        let action = value.defaultAction;
-        let position = null;
-        for (let [actKey, actValue] of Object.entries(actionKeywords)) {
-          if (text.includes(actKey) && text.indexOf(actKey) > text.indexOf(key) - 20 && text.indexOf(actKey) < text.indexOf(key) + 20) {
-            action = actValue;
-            break;
-          }
-        }
-        for (let [posKey, posValue] of Object.entries(positionKeywords)) {
-          if (text.includes(posKey) && text.indexOf(posKey) > text.indexOf(key) - 25 && text.indexOf(posKey) < text.indexOf(key) + 25) {
-            position = posValue;
-            break;
-          }
-        }
-        let charStr = value.name + ' ' + action;
-        if (position) {
-          let posText = '';
-          if (position === 'left') posText = 'слева';
-          else if (position === 'right') posText = 'справа';
-          else if (position === 'top') posText = 'вверху';
-          else if (position === 'bottom') posText = 'внизу';
-          else if (position === 'center') posText = 'в центре';
-          charStr += ' ' + posText;
-        }
-        // Добавим немного красок: если есть прилагательные в запросе, можно их добавить, но для простоты оставим так
-        detectedCharacters.push(charStr);
-      }
-    }
+                    setTimeout(() => {
+                        waveWaiting = false;
+                    }, 3000);
+                } else {
+                    setTimeout(spawnWave, 500);
+                }
+            }
 
-    for (let [key, value] of Object.entries(landscapeCategoryMap)) {
-      if (text.includes(key)) detectedLandscape.add(key); // сохраняем исходное слово
-    }
+            // Взрыв динамита (возвращает true, если игра должна продолжиться)
+            function explodeAndCheckLoss(newGrid, y, x) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        const ny = y + dy;
+                        const nx = x + dx;
+                        if (ny < 0 || ny >= ROWS || nx < 0 || nx >= COLS) continue;
+                        const target = newGrid[ny][nx];
+                        if (target && target.type === 'block') {
+                            newGrid[ny][nx] = null;
+                            remainingBet -= BLOCK_COST;
+                            remainingSpan.textContent = remainingBet;
+                            if (remainingBet <= 0) {
+                                messageDiv.textContent = '💔 Ставка проиграна!';
+                                gameActive = false;
+                                startBtn.disabled = false;
+                                betInput.disabled = false;
+                                tabs.forEach(t => t.classList.remove('disabled'));
+                                saveBalance();
+                                updateBalance();
+                                return false; // игра окончена
+                            }
+                        } else if (target && target.type === 'chest') {
+                            newGrid[ny][nx] = null; // сундук уничтожен, списания нет
+                        }
+                    }
+                }
+                return true; // продолжаем
+            }
 
-    if (detectedLandscape.size > 0) {
-      parts.push(Array.from(detectedLandscape).join(', '));
-    }
-    if (detectedCharacters.length > 0) {
-      let uniqueChars = [...new Set(detectedCharacters)];
-      parts.push(uniqueChars.join(', '));
-    }
+            // Открытие сундуков
+            function openChests() {
+                let mult = 1;
+                let count = 0;
+                for (let c of chests) {
+                    let clear = true;
+                    for (let yy = c.y - 1; yy >= 0; yy--) {
+                        if (grid[yy][c.x] !== null) { clear = false; break; }
+                    }
+                    if (clear) {
+                        count++;
+                        const r = Math.random();
+                        if (r < 0.5) mult *= 1;
+                        else if (r < 0.9) mult *= 2;
+                        else mult *= 3;
+                    }
+                }
+                if (count > 0) {
+                    const win = remainingBet * mult;
+                    balance += win;
+                    messageDiv.textContent = `🎉 Выигрыш: ${win} (x${mult})`;
+                } else {
+                    messageDiv.textContent = '😢 Сундуки не открылись.';
+                }
+                saveBalance();
+                updateBalance();
+                gameActive = false;
+                startBtn.disabled = false;
+                betInput.disabled = false;
+                infoBar.textContent = 'Игра окончена.';
+                tabs.forEach(t => t.classList.remove('disabled'));
+            }
 
-    if (parts.length === 0) {
-      let defaultPrompts = [
-        'горы, озеро, замок, дракон летит вверху, человек бежит слева',
-        'лес, река, медведь идёт, рыба плывёт справа',
-        'пустыня, кактусы, ковбой скачет, змея ползёт'
-      ];
-      return defaultPrompts[Math.floor(Math.random() * defaultPrompts.length)];
-    }
+            // Проверка окончания игры
+            function checkGameOver() {
+                if (!gameActive) return;
+                if (currentWaveId >= MAX_WAVES - 1 && activeObjects === 0) {
+                    openChests();
+                }
+            }
 
-    return parts.join(', ');
-  }
+            // Игровой тик (движение)
+            function gameTick() {
+                if (!gameActive || currentWaveId === -1 || waveWaiting) return;
 
-  // --- Обработчик чата ---
-  chatSendBtn.addEventListener('click', () => {
-    const q = chatInput.value.trim();
-    if (!q) return;
-    assistantMessages.innerHTML += `<p><strong>Вы:</strong> ${q}</p>`;
-    const generatedPrompt = generatePromptFromUserInput(q);
-    const assistantDiv = document.createElement('div');
-    assistantDiv.innerHTML = `<p><strong>Ассистент:</strong> ${generatedPrompt} <button class="insert-prompt-btn" data-prompt="${generatedPrompt.replace(/"/g, '&quot;')}">📋 Вставить</button></p>`;
-    assistantMessages.appendChild(assistantDiv);
-    const insertBtn = assistantDiv.querySelector('.insert-prompt-btn');
-    insertBtn.addEventListener('click', (e) => {
-      const promptToInsert = e.target.getAttribute('data-prompt');
-      promptInput.value = promptToInsert;
-      charSpan.innerText = 5000 - promptToInsert.length;
-      promptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-    chatInput.value = '';
-    assistantMessages.scrollTop = assistantMessages.scrollHeight;
-  });
+                const newGrid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+                // Копируем блоки и сундуки
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const c = grid[y][x];
+                        if (c && (c.type === 'block' || c.type === 'chest')) {
+                            newGrid[y][x] = { ...c };
+                        }
+                    }
+                }
 
-  // --- Отрисовка ландшафта (с озером и огромными домами) ---
-  function drawLandscape(ctx, w, h, t, landscapeCategories, windRad, windSp) {
-    // Небо
-    const gradSky = ctx.createLinearGradient(0, 0, 0, h);
-    gradSky.addColorStop(0, '#0b3b5c');
-    gradSky.addColorStop(0.5, '#2a6f9f');
-    gradSky.addColorStop(1, '#f0c27b');
-    ctx.fillStyle = gradSky;
-    ctx.fillRect(0, 0, w, h);
+                // Обрабатываем объекты сверху вниз
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        const obj = grid[y][x];
+                        if (!obj) continue;
+                        if (obj.type !== 'pickaxe' && obj.type !== 'dynamite') continue;
+                        if (obj.waveId !== currentWaveId) continue;
 
-    // Облака
-    let cloudOffset = (t * windSp * 40 * Math.cos(windRad)) % (w + 600) - 300;
-    ctx.shadowColor = '#00000040';
-    ctx.shadowBlur = 25;
-    ctx.fillStyle = '#ffffffdd';
-    for (let i=0; i<6; i++) {
-      let x = i * 280 + cloudOffset;
-      let y = h*0.1 + i*15;
-      ctx.beginPath();
-      ctx.ellipse(x, y, 110, 35, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(x+80, y-15, 90, 30, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(x-50, y+5, 80, 28, 0, 0, 2*Math.PI);
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
+                        if (y === ROWS - 1) {
+                            activeObjects--;
+                            continue;
+                        }
 
-    // Горы
-    if (landscapeCategories.has('mountain')) {
-      ctx.fillStyle = '#4a5f73';
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#1e2f3a';
-      for (let i=0; i<3; i++) {
-        let baseX = w*(0.2 + i*0.3);
-        ctx.beginPath();
-        ctx.moveTo(baseX-100, h*0.65);
-        ctx.lineTo(baseX, h*0.3);
-        ctx.lineTo(baseX+100, h*0.65);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.shadowBlur = 0;
-    }
+                        const below = newGrid[y + 1][x];
 
-    // Пустыня/песок
-    if (landscapeCategories.has('sand') || landscapeCategories.has('desert')) {
-      ctx.fillStyle = '#f4e6b0';
-      ctx.fillRect(0, h*0.7, w, h*0.3);
-      ctx.strokeStyle = '#d2b48c';
-      ctx.lineWidth = 3;
-      for (let i=0; i<8; i++) {
-        let x = i*150 + t*20 % 300;
-        ctx.beginPath();
-        ctx.moveTo(x-100, h*0.75);
-        ctx.quadraticCurveTo(x, h*0.65, x+100, h*0.75);
-        ctx.stroke();
-      }
-    }
+                        if (below === null) {
+                            // Пусто — перемещаем
+                            if (obj.type === 'pickaxe') {
+                                newGrid[y + 1][x] = { type: 'pickaxe', material: obj.material, uses: obj.uses, waveId: obj.waveId };
+                            } else {
+                                newGrid[y + 1][x] = { type: 'dynamite', waveId: obj.waveId };
+                            }
+                        }
+                        else if (below.type === 'block' || below.type === 'chest') {
+                            if (obj.type === 'pickaxe') {
+                                if (below.type === 'block') {
+                                    below.hp -= obj.material.damage;
+                                    let uses = obj.uses - 1;
+                                    if (uses <= 0) {
+                                        activeObjects--;
+                                        if (below.hp <= 0) {
+                                            newGrid[y + 1][x] = null;
+                                            remainingBet -= BLOCK_COST;
+                                            remainingSpan.textContent = remainingBet;
+                                            if (remainingBet <= 0) {
+                                                messageDiv.textContent = '💔 Ставка проиграна!';
+                                                gameActive = false;
+                                                startBtn.disabled = false;
+                                                betInput.disabled = false;
+                                                tabs.forEach(t => t.classList.remove('disabled'));
+                                                saveBalance();
+                                                updateBalance();
+                                                return;
+                                            }
+                                        }
+                                    } else {
+                                        if (below.hp <= 0) {
+                                            newGrid[y + 1][x] = { type: 'pickaxe', material: obj.material, uses, waveId: obj.waveId };
+                                            remainingBet -= BLOCK_COST;
+                                            remainingSpan.textContent = remainingBet;
+                                            if (remainingBet <= 0) {
+                                                messageDiv.textContent = '💔 Ставка проиграна!';
+                                                gameActive = false;
+                                                startBtn.disabled = false;
+                                                betInput.disabled = false;
+                                                tabs.forEach(t => t.classList.remove('disabled'));
+                                                saveBalance();
+                                                updateBalance();
+                                                return;
+                                            }
+                                        } else {
+                                            if (newGrid[y][x] === null) {
+                                                newGrid[y][x] = { type: 'pickaxe', material: obj.material, uses, waveId: obj.waveId };
+                                            } else {
+                                                activeObjects--;
+                                            }
+                                        }
+                                    }
+                                } else { // chest
+                                    // кирка не ломает сундук, остаётся на месте
+                                    if (newGrid[y][x] === null) {
+                                        newGrid[y][x] = { type: 'pickaxe', material: obj.material, uses: obj.uses, waveId: obj.waveId };
+                                    } else {
+                                        activeObjects--;
+                                    }
+                                }
+                            } else { // dynamite
+                                const continueGame = explodeAndCheckLoss(newGrid, y, x);
+                                if (!continueGame) return; // игра окончена
+                                activeObjects--;
+                            }
+                        }
+                        else if (below.type === 'pickaxe' || below.type === 'dynamite') {
+                            // под другим объектом — стоим
+                            if (newGrid[y][x] === null) {
+                                if (obj.type === 'pickaxe') {
+                                    newGrid[y][x] = { type: 'pickaxe', material: obj.material, uses: obj.uses, waveId: obj.waveId };
+                                } else {
+                                    newGrid[y][x] = { type: 'dynamite', waveId: obj.waveId };
+                                }
+                            } else {
+                                activeObjects--;
+                            }
+                        }
+                    }
+                }
 
-    // Земля
-    const groundBase = h * 0.7;
-    ctx.fillStyle = '#2a5a2a';
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-    ctx.lineTo(0, groundBase);
-    for (let x=0; x<=w; x+=15) {
-      let y = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(w, h);
-    ctx.closePath();
-    ctx.fill();
+                grid = newGrid;
+                renderGrid();
 
-    // Трава
-    let lean = windSp * 0.5 * Math.cos(windRad) * 25;
-    ctx.shadowColor = '#1a2a1a';
-    ctx.shadowBlur = 5;
-    for (let i=0; i<300; i++) {
-      let x = (i * 4) % w;
-      let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-      let hgt = 20 + 8*Math.sin(x*0.3 + t*6);
-      ctx.strokeStyle = `hsl(${100+Math.sin(x)*20}, 70%, 35%)`;
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.moveTo(x, baseY);
-      ctx.lineTo(x + lean, baseY - hgt);
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
+                // Проверяем, не пора ли следующую волну
+                if (activeObjects === 0 && currentWaveId < MAX_WAVES - 1) {
+                    setTimeout(spawnWave, 3000);
+                }
 
-    // ОЗЕРО (поверх травы)
-    if (landscapeCategories.has('water')) {
-      ctx.globalAlpha = 0.6;
-      ctx.fillStyle = '#1E90FF';
-      ctx.beginPath();
-      ctx.ellipse(w*0.5, groundBase + 40, w*0.3, 60, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.globalAlpha = 0.3;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.ellipse(w*0.45, groundBase + 30, 40, 15, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.globalAlpha = 1.0;
-    }
+                checkGameOver();
+            }
 
-    // Дороги
-    if (landscapeCategories.has('road')) {
-      ctx.strokeStyle = '#4a3f2b';
-      ctx.lineWidth = 12;
-      ctx.beginPath();
-      ctx.moveTo(0, groundBase-5);
-      ctx.lineTo(w, groundBase-5);
-      ctx.stroke();
-      ctx.strokeStyle = '#f5e6d3';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, groundBase-5);
-      ctx.lineTo(w, groundBase-5);
-      ctx.stroke();
-    }
+            // Запуск игры 1
+            function startGame() {
+                const bet = parseInt(betInput.value, 10);
+                if (isNaN(bet) || bet <= 0) { alert('Введите корректную ставку'); return; }
+                if (bet > balance) { alert('Недостаточно средств'); return; }
 
-    // Мосты
-    if (landscapeCategories.has('bridge') && landscapeCategories.has('water')) {
-      ctx.fillStyle = '#8b5a2b';
-      ctx.fillRect(w*0.4, groundBase-20, w*0.2, 15);
-      ctx.fillStyle = '#5d3a1a';
-      ctx.fillRect(w*0.45, groundBase-35, w*0.1, 15);
-    }
+                balance -= bet;
+                saveBalance();
+                updateBalance();
 
-    // ОГРОМНЫЕ ДОМА
-    if (landscapeCategories.has('building')) {
-      const houseColors = ['#a0522d', '#8b4513', '#b8860b', '#cd853f'];
-      for (let i=0; i<4; i++) {
-        let x = w*(0.15 + i*0.2) + Math.sin(t + i)*5;
-        let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-        let houseWidth = 60;
-        let houseHeight = 100;
-        ctx.fillStyle = houseColors[i % houseColors.length];
-        ctx.fillRect(x - houseWidth/2, baseY - houseHeight, houseWidth, houseHeight);
-        ctx.fillStyle = '#8b0000';
-        ctx.beginPath();
-        ctx.moveTo(x - houseWidth/2 - 10, baseY - houseHeight);
-        ctx.lineTo(x, baseY - houseHeight - 50);
-        ctx.lineTo(x + houseWidth/2 + 10, baseY - houseHeight);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#f5e6d3';
-        ctx.fillRect(x - 20, baseY - houseHeight + 20, 12, 15);
-        ctx.fillRect(x + 8, baseY - houseHeight + 20, 12, 15);
-        ctx.fillRect(x - 20, baseY - houseHeight + 50, 12, 15);
-        ctx.fillRect(x + 8, baseY - houseHeight + 50, 12, 15);
-        ctx.fillStyle = '#5d3a1a';
-        ctx.fillRect(x - 10, baseY - 30, 20, 30);
-        ctx.fillStyle = '#696969';
-        ctx.fillRect(x + 15, baseY - houseHeight - 60, 10, 30);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x - 20, baseY - houseHeight + 20, 12, 15);
-        ctx.strokeRect(x + 8, baseY - houseHeight + 20, 12, 15);
-        ctx.strokeRect(x - 20, baseY - houseHeight + 50, 12, 15);
-        ctx.strokeRect(x + 8, baseY - houseHeight + 50, 12, 15);
-        ctx.strokeRect(x - 10, baseY - 30, 20, 30);
-      }
-    }
+                initGrid();
+                remainingBet = bet;
+                currentWaveId = -1;
+                activeObjects = 0;
+                waveWaiting = false;
+                gameActive = true;
+                startBtn.disabled = true;
+                betInput.disabled = true;
+                messageDiv.textContent = '';
+                infoBar.textContent = 'Идёт игра...';
+                remainingSpan.textContent = remainingBet;
+                waveSpan.textContent = '0/4';
 
-    // Деревья
-    if (landscapeCategories.has('tree')) {
-      for (let i=0; i<8; i++) {
-        let x = w*(0.1 + i*0.1) + Math.sin(t + i)*5;
-        let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-        ctx.fillStyle = '#8b5a2b';
-        ctx.fillRect(x-6, baseY-60, 12, 60);
-        ctx.fillStyle = '#2e7d32';
-        ctx.beginPath();
-        ctx.ellipse(x-5, baseY-85, 25, 20, 0, 0, 2*Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(x+10, baseY-95, 20, 18, 0.2, 0, 2*Math.PI);
-        ctx.fill();
-      }
-    }
+                // Блокируем вкладки
+                tabs.forEach(t => t.classList.add('disabled'));
 
-    // Цветы
-    if (landscapeCategories.has('flower')) {
-      for (let i=0; i<30; i++) {
-        let x = (i*25 + t*10) % w;
-        let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-        ctx.fillStyle = `hsl(${i*50%360}, 80%, 70%)`;
-        ctx.beginPath();
-        ctx.arc(x, baseY-15, 5, 0, 2*Math.PI);
-        ctx.fill();
-        ctx.fillStyle = '#ffd700';
-        ctx.beginPath();
-        ctx.arc(x-2, baseY-18, 2, 0, 2*Math.PI);
-        ctx.fill();
-      }
-    }
+                renderGrid();
 
-    // Камни
-    if (landscapeCategories.has('rock')) {
-      ctx.fillStyle = '#7f8c8d';
-      for (let i=0; i<10; i++) {
-        let x = (i*50 + t*5) % w;
-        let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-        ctx.beginPath();
-        ctx.ellipse(x, baseY-5, 8, 4, 0, 0, 2*Math.PI);
-        ctx.fill();
-      }
-    }
+                setTimeout(() => {
+                    if (gameActive) spawnWave();
+                }, 1000);
+            }
 
-    // Костёр
-    if (landscapeCategories.has('fire')) {
-      let x = w*0.5;
-      let baseY = groundBase + 5*Math.sin(x*0.02 + t*0.5) + 3*Math.sin(x*0.05 + t);
-      ctx.fillStyle = '#ff4500';
-      ctx.beginPath();
-      ctx.arc(x, baseY-25, 10, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#ffa500';
-      ctx.beginPath();
-      ctx.arc(x-3, baseY-30, 6, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#ffff00';
-      ctx.beginPath();
-      ctx.arc(x+2, baseY-35, 4, 0, 2*Math.PI);
-      ctx.fill();
-    }
-  }
+            startBtn.addEventListener('click', startGame);
 
-  // --- Полная реалистичная отрисовка персонажа ---
-  function drawCharacter(ctx, type, action, baseX, baseY, t, idx, color, accessory, groundBase, w, position) {
-    let posX = baseX;
-    let posY = baseY;
-    if (position === 'left') {
-      posX = w * 0.15;
-    } else if (position === 'right') {
-      posX = w * 0.85;
-    } else if (position === 'center') {
-      posX = w * 0.5;
-    } else if (position === 'top') {
-      posY = groundBase * 0.6;
-    } else if (position === 'bottom') {
-      posY = groundBase + 20;
-    }
-    let offsetX = 0;
-    let offsetY = 0;
-    if (action === 'бежит') {
-      offsetX = Math.sin(t * 5 + idx) * 40;
-      offsetY = Math.sin(t * 10 + idx) * 5;
-    } else if (action === 'летит' || action === 'парит' || action === 'порхает') {
-      offsetY = -40 + Math.sin(t * 4 + idx) * 20;
-      offsetX = Math.sin(t * 2 + idx) * 20;
-    } else if (action === 'плывёт') {
-      offsetY = Math.sin(t * 3 + idx) * 8;
-      offsetX = Math.sin(t * 2 + idx) * 15;
-    } else if (action === 'прыгает' || action === 'скачет') {
-      offsetY = Math.abs(Math.sin(t * 8 + idx)) * (-30);
-      offsetX = Math.sin(t * 6 + idx) * 20;
-    } else if (action === 'идёт' || action === 'шагает') {
-      offsetX = Math.sin(t * 4 + idx) * 15;
-      offsetY = Math.sin(t * 8 + idx) * 3;
-    } else if (action === 'танцует') {
-      offsetX = Math.sin(t * 7 + idx) * 20;
-      offsetY = Math.sin(t * 9 + idx) * 10;
-    } else if (action === 'висит') {
-      offsetY = -30 + Math.sin(t * 5 + idx) * 5;
-    } else if (action === 'ползёт') {
-      offsetX = Math.sin(t * 3 + idx) * 10;
-      offsetY = Math.sin(t * 6 + idx) * 3;
-    } else {
-      offsetY = Math.sin(t * 5 + idx) * 3;
-    }
-    let x = posX + offsetX;
-    if (x < 30) x = 30;
-    if (x > w - 30) x = w - 30;
-    let y = posY + offsetY;
+            // ---------- Игра 2 ----------
+            function generateProblem() {
+                const r = Math.random();
+                let diff;
+                if (r < 0.33) diff = 'easy';
+                else if (r < 0.66) diff = 'medium';
+                else diff = 'hard';
 
-    ctx.fillStyle = '#00000060';
-    ctx.beginPath();
-    ctx.ellipse(x, posY-2, 20, 8, 0, 0, 2*Math.PI);
-    ctx.fill();
+                let text, answer;
+                if (diff === 'easy') {
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    if (Math.random() < 0.5) {
+                        text = `${a} + ${b}`;
+                        answer = a + b;
+                    } else {
+                        if (a >= b) { text = `${a} - ${b}`; answer = a - b; }
+                        else { text = `${b} - ${a}`; answer = b - a; }
+                    }
+                } else if (diff === 'medium') {
+                    const a = Math.floor(Math.random() * 9) + 2;
+                    const b = Math.floor(Math.random() * 9) + 2;
+                    if (Math.random() < 0.5) {
+                        text = `${a} × ${b}`;
+                        answer = a * b;
+                    } else {
+                        const prod = a * b;
+                        text = `${prod} ÷ ${a}`;
+                        answer = b;
+                    }
+                } else {
+                    const a = Math.floor(Math.random() * 10) + 2;
+                    const b = Math.floor(Math.random() * 10) + 2;
+                    const c = Math.floor(Math.random() * 5) + 2;
+                    const v = Math.floor(Math.random() * 3);
+                    if (v === 0) {
+                        text = `(${a} + ${b}) × ${c}`;
+                        answer = (a + b) * c;
+                    } else if (v === 1) {
+                        text = `${a} × ${b} + ${c}`;
+                        answer = a * b + c;
+                    } else {
+                        text = `${a} × ${b} - ${c}`;
+                        answer = a * b - c;
+                    }
+                }
+                return { text, answer, difficulty: diff };
+            }
 
-    ctx.save();
+            function updateProblem() {
+                currentProblem = generateProblem();
+                problemDiv.textContent = currentProblem.text;
+                const diffText = { easy: 'Легкая (+5)', medium: 'Средняя (+10)', hard: 'Сложная (+20)' };
+                difficultyBadge.textContent = diffText[currentProblem.difficulty];
+                answerInput.value = '';
+                game2Message.textContent = '';
+            }
 
-    if (type === 'человек') {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y-85, 16, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-6, y-90, 2, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+6, y-90, 2, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(x-7, y-91, 0.8, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+5, y-91, 0.8, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#4A2C2C';
-      ctx.beginPath();
-      ctx.arc(x, y-100, 10, 0, Math.PI, true);
-      ctx.fill();
-      ctx.fillStyle = '#3B7A57';
-      ctx.fillRect(x-10, y-65, 20, 40);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.moveTo(x-10, y-55); ctx.lineTo(x-22, y-45 + Math.sin(t*8+idx)*8); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x+10, y-55); ctx.lineTo(x+22, y-45 - Math.sin(t*8+idx)*8); ctx.stroke();
-      ctx.fillStyle = '#2C5F2D';
-      ctx.fillRect(x-7, y-30, 6, 25);
-      ctx.fillRect(x+1, y-30, 6, 25);
-    } else if (type === 'дракон') {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.ellipse(x, y-50, 25, 15, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#B22222';
-      ctx.beginPath();
-      ctx.arc(x-15, y-70, 15, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#FFFF00';
-      ctx.beginPath();
-      ctx.arc(x-22, y-75, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-23, y-76, 1.5, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#FFFF00';
-      ctx.beginPath();
-      ctx.arc(x-8, y-75, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-9, y-76, 1.5, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#8B4513';
-      ctx.beginPath();
-      ctx.moveTo(x-25, y-88);
-      ctx.lineTo(x-30, y-105);
-      ctx.lineTo(x-20, y-95);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x-5, y-88);
-      ctx.lineTo(x-10, y-105);
-      ctx.lineTo(x, y-95);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#CD5C5C';
-      ctx.beginPath();
-      ctx.moveTo(x+20, y-60);
-      ctx.lineTo(x+50, y-90);
-      ctx.lineTo(x+35, y-50);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x-20, y-60);
-      ctx.lineTo(x-50, y-90);
-      ctx.lineTo(x-35, y-50);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(x+25, y-40);
-      ctx.lineTo(x+50, y-30 + Math.sin(t*5+idx)*10);
-      ctx.stroke();
-      ctx.fillStyle = '#8B0000';
-      for (let i=0; i<5; i++) {
-        ctx.beginPath();
-        ctx.arc(x-10 + i*8, y-55 + i*2, 2, 0, 2*Math.PI);
-        ctx.fill();
-      }
-    } else if (type === 'птица') {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.ellipse(x, y-45, 16, 8, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#8B4513';
-      ctx.beginPath();
-      ctx.arc(x+8, y-60, 8, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#DAA520';
-      ctx.beginPath();
-      ctx.moveTo(x+15, y-62);
-      ctx.lineTo(x+25, y-60);
-      ctx.lineTo(x+15, y-58);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x+5, y-63, 2, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#A0522D';
-      ctx.beginPath();
-      ctx.ellipse(x-5, y-50, 12, 5, -0.3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#8B4513';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(x-20, y-40);
-      ctx.lineTo(x-30, y-45 + Math.sin(t*4+idx)*5);
-      ctx.stroke();
-    } else if (type === 'рыба') {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.ellipse(x, y-30, 20, 10, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#1E90FF';
-      ctx.beginPath();
-      ctx.moveTo(x+20, y-30);
-      ctx.lineTo(x+35, y-40);
-      ctx.lineTo(x+35, y-20);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-10, y-35, 2, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(x-11, y-36, 1, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#4682B4';
-      ctx.beginPath();
-      ctx.moveTo(x-5, y-45);
-      ctx.lineTo(x-15, y-55);
-      ctx.lineTo(x, y-50);
-      ctx.closePath();
-      ctx.fill();
-    } else if (type === 'кот') {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.ellipse(x, y-35, 20, 12, 0, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x, y-60, 16, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#8B4513';
-      ctx.beginPath();
-      ctx.moveTo(x-10, y-74);
-      ctx.lineTo(x-18, y-90);
-      ctx.lineTo(x-6, y-80);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x+10, y-74);
-      ctx.lineTo(x+18, y-90);
-      ctx.lineTo(x+6, y-80);
-      ctx.fill();
-      ctx.fillStyle = '#2ECC71';
-      ctx.beginPath();
-      ctx.arc(x-7, y-67, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+7, y-67, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-7, y-67, 1.5, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+7, y-67, 1.5, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(x-5, y-60); ctx.lineTo(x-20, y-60); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x+5, y-60); ctx.lineTo(x+20, y-60); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-5, y-55); ctx.lineTo(x-18, y-53); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x+5, y-55); ctx.lineTo(x+18, y-53); ctx.stroke();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 8;
-      ctx.beginPath(); ctx.moveTo(x+20, y-30); ctx.lineTo(x+35, y-20 + Math.sin(t*6+idx)*10); ctx.stroke();
-    } else if (type === 'робот') {
-      ctx.fillStyle = '#C0C0C0';
-      ctx.fillRect(x-15, y-60, 30, 30);
-      ctx.fillStyle = '#A9A9A9';
-      ctx.fillRect(x-10, y-90, 20, 20);
-      ctx.fillStyle = '#00FF00';
-      ctx.beginPath();
-      ctx.arc(x-5, y-82, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+5, y-82, 3, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x, y-100); ctx.lineTo(x, y-110); ctx.stroke();
-      ctx.beginPath(); ctx.arc(x, y-110, 2, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill();
-    } else {
-      ctx.fillStyle = color;
-      ctx.fillRect(x-10, y-50, 20, 30);
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(x-4, y-65, 2, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x+4, y-65, 2, 0, 2*Math.PI);
-      ctx.fill();
-    }
+            checkBtn.addEventListener('click', () => {
+                const ans = parseInt(answerInput.value, 10);
+                if (isNaN(ans)) {
+                    game2Message.textContent = 'Введите число!';
+                    return;
+                }
+                if (ans === currentProblem.answer) {
+                    const reward = REWARDS[currentProblem.difficulty];
+                    balance += reward;
+                    saveBalance();
+                    updateBalance();
+                    game2Message.textContent = `✅ Правильно! +${reward}`;
+                    updateProblem();
+                } else {
+                    game2Message.textContent = '❌ Неправильно.';
+                }
+            });
 
-    ctx.restore();
+            newProblemBtn.addEventListener('click', updateProblem);
 
-    if (accessory === 'hat') {
-      ctx.fillStyle = '#8b4513';
-      ctx.fillRect(x-15, y-100, 30, 8);
-      ctx.fillRect(x-8, y-110, 16, 12);
-    } else if (accessory === 'glasses') {
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x-7, y-82, 5, 0, 2*Math.PI); ctx.stroke();
-      ctx.beginPath(); ctx.arc(x+7, y-82, 5, 0, 2*Math.PI); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-2, y-82); ctx.lineTo(x+2, y-82); ctx.stroke();
-    } else if (accessory === 'bucket') {
-      ctx.fillStyle = '#7f8c8d';
-      ctx.fillRect(x-15, y-105, 30, 15);
-    }
-  }
+            // ---------- Переключение вкладок ----------
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.classList.contains('disabled')) return;
+                    const game = tab.dataset.game;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
 
-  function drawScene(ctx, w, h, t, parsed) {
-    ctx.clearRect(0, 0, w, h);
-    const windRad = wind.dir * Math.PI/180;
-    drawLandscape(ctx, w, h, t, parsed.landscape, windRad, wind.speed);
+                    if (game === 'game1') {
+                        game1Div.style.display = 'flex';
+                        game2Div.style.display = 'none';
+                        remainingContainer.style.display = 'inline-block';
+                        waveContainer.style.display = 'inline-block';
+                        betArea.style.display = 'flex';
+                        currentGame = 'game1';
+                    } else {
+                        game1Div.style.display = 'none';
+                        game2Div.style.display = 'flex';
+                        remainingContainer.style.display = 'none';
+                        waveContainer.style.display = 'none';
+                        betArea.style.display = 'none';
+                        currentGame = 'game2';
+                        if (gameActive) {
+                            // Прерываем игру 1
+                            gameActive = false;
+                            startBtn.disabled = false;
+                            betInput.disabled = false;
+                            tabs.forEach(t => t.classList.remove('disabled'));
+                            messageDiv.textContent = 'Игра прервана.';
+                            initGrid();
+                            renderGrid();
+                        }
+                        updateProblem();
+                    }
+                });
+            });
 
-    let startX = w*0.15;
-    let stepX = w*0.18;
-    let idx = 0;
-    for (let ch of parsed.characters) {
-      let baseY = h*0.7 + 5*Math.sin(startX*0.02 + t*0.5) + 3*Math.sin(startX*0.05 + t);
-      drawCharacter(ctx, ch.type, ch.action, startX + idx*stepX, baseY, t, idx, ch.color, ch.accessory, h*0.7, w, ch.position);
-      idx++;
-      if (idx > 7) break;
-    }
-  }
-
-  // --- Запуск видео (бесконечная анимация) ---
-  function startLiveVideo(promptText) {
-    stopVideo();
-    let w = 854, h = 480;
-    const res = document.querySelector('input[name="resolution"]:checked').value;
-    if (res === '720p') { w=1280; h=720; }
-    if (res === '1080p') { w=1920; h=1080; }
-    const fps = parseInt(document.getElementById('fpsSelect').value) || 30;
-    offCanvas = document.createElement('canvas');
-    offCanvas.width = w; offCanvas.height = h;
-    const ctx = offCanvas.getContext('2d');
-    canvasStream = offCanvas.captureStream(fps);
-    videoPreview.srcObject = canvasStream;
-    videoPreview.play().catch(()=>{});
-    let parsed = parsePrompt(promptText);
-    let start = performance.now();
-    function draw() {
-      let t = (performance.now() - start)/1000;
-      drawScene(ctx, w, h, t, parsed);
-      animFrame = requestAnimationFrame(draw);
-    }
-    draw();
-  }
-
-  // --- Запись видео на заданное время с последующим скачиванием ---
-  function recordVideo(durationSec) {
-    if (isRecording) return;
-    isRecording = true;
-    downloadBtn.disabled = true;
-    statusMsg.textContent = '⏺ Запись видео...';
-
-    // Останавливаем текущее видео
-    stopVideo();
-
-    // Создаём новый canvas и поток
-    let w = 854, h = 480;
-    const res = document.querySelector('input[name="resolution"]:checked').value;
-    if (res === '720p') { w=1280; h=720; }
-    if (res === '1080p') { w=1920; h=1080; }
-    const fps = parseInt(document.getElementById('fpsSelect').value) || 30;
-    offCanvas = document.createElement('canvas');
-    offCanvas.width = w; offCanvas.height = h;
-    const ctx = offCanvas.getContext('2d');
-    const stream = offCanvas.captureStream(fps);
-    videoPreview.srcObject = stream;
-    videoPreview.play().catch(()=>{});
-
-    const prompt = promptInput.value.trim() || 'горы, озеро, замок, дракон';
-    let parsed = parsePrompt(prompt);
-    let startTime = performance.now();
-    let startAnim = performance.now();
-    let animFrame;
-
-    // Подготовка MediaRecorder
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) recordedChunks.push(e.data);
-    };
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `video_${Date.now()}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
-      isRecording = false;
-      downloadBtn.disabled = false;
-      statusMsg.textContent = '✅ Запись завершена, файл скачан';
-      // После записи можно снова запустить бесконечное видео
-      startLiveVideo(prompt);
-    };
-
-    mediaRecorder.start();
-
-    // Функция анимации кадров
-    function draw() {
-      let t = (performance.now() - startAnim)/1000;
-      drawScene(ctx, w, h, t, parsed);
-      if (performance.now() - startTime < durationSec * 1000) {
-        animFrame = requestAnimationFrame(draw);
-      } else {
-        // Время вышло
-        mediaRecorder.stop();
-        cancelAnimationFrame(animFrame);
-        // Поток остановится сам после остановки рекордера, но можно принудительно
-        stream.getTracks().forEach(t => t.stop());
-      }
-    }
-    animFrame = requestAnimationFrame(draw);
-  }
-
-  // --- Генерация с прогресом ---
-  function startGeneration() {
-    if (isGenerating) return;
-    isGenerating = true;
-    progress = 0;
-    generateBtn.disabled = true;
-    downloadBtn.disabled = true;
-    saveToGalleryBtn.disabled = true;
-    const prompt = promptInput.value.trim() || 'горы, озеро, замок, дракон летит вверху, человек бежит слева';
-    stopVideo();
-
-    genInterval = setInterval(() => {
-      progress += 2;
-      if (progress > 100) progress = 100;
-      progressFill.style.width = progress + '%';
-      generateBtn.textContent = `Генерация ${progress}%`;
-      if (progress < 30) statusMsg.textContent = '🎨 Анализ промпта (5000+ объектов)...';
-      else if (progress < 70) statusMsg.textContent = '🍃 Анимация ландшафта и персонажей...';
-      else statusMsg.textContent = '✨ Финальная сборка...';
-      if (progress >= 100) {
-        clearInterval(genInterval);
-        genInterval = null;
-        completeGeneration(prompt);
-      }
-    }, 40);
-  }
-
-  function completeGeneration(prompt) {
-    isGenerating = false;
-    generateBtn.disabled = false;
-    generateBtn.textContent = 'Сгенерировать видео';
-    startLiveVideo(prompt);
-    downloadBtn.disabled = false;
-    saveToGalleryBtn.disabled = false;
-    statusMsg.textContent = '✅ Готово! Теперь можно скачать видео.';
-    addThumbnail();
-  }
-
-  function addThumbnail() {
-    let thumb = document.createElement('div');
-    thumb.className = 'gallery-item';
-    thumb.innerHTML = '<img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%25\' height=\'100%25\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%232d3b4f\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' fill=\'%23ffffff\' text-anchor=\'middle\' font-size=\'12\'%3EКадр%3C/text%3E%3C/svg%3E">';
-    thumb.addEventListener('click', () => { modal.classList.add('active'); });
-    galleryContainer.prepend(thumb);
-    while (galleryContainer.children.length > 9) galleryContainer.removeChild(galleryContainer.lastChild);
-  }
-
-  // --- Обработчики кнопок ---
-  generateBtn.addEventListener('click', startGeneration);
-  saveToGalleryBtn.addEventListener('click', addThumbnail);
-  
-  // Кнопка скачивания теперь запускает запись на заданное время
-  downloadBtn.addEventListener('click', () => {
-    if (downloadBtn.disabled) return;
-    const duration = parseInt(durationSlider.value);
-    if (duration > 60) {
-      alert('Максимальная длительность 60 секунд');
-      return;
-    }
-    recordVideo(duration);
-  });
-
-  resetBtn.addEventListener('click', () => {
-    promptInput.value = 'горы, озеро, большой замок, деревянный мост, цветущий сад, старая мельница, песчаные дюны, пальмы, руины храма, костёр, скамейка, фонарь, колодец, лодка на озере, красный дракон летит вверху, человек бежит слева';
-    charSpan.innerText = 5000 - promptInput.value.length;
-    stopVideo();
-    downloadBtn.disabled = true; saveToGalleryBtn.disabled = true;
-    if (isGenerating) clearInterval(genInterval);
-    generateBtn.disabled = false; generateBtn.textContent = 'Сгенерировать видео';
-    progressFill.style.width = '0%'; statusMsg.textContent = '⏳ Ожидание';
-    wind.dir = 90; windDir.value = 90; windDirVal.innerText = '90°'; windArrow.style.transform = 'rotate(90deg)';
-    wind.speed = 1.2; windSpeed.value = 1.2; windSpeedVal.innerText = '1.2';
-  });
-
-  modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
-  modalDownloadBtn.addEventListener('click', () => {
-    // Скачивание из модалки – можно просто вызвать downloadBtn.click, но там запустится запись.
-    // Лучше сделать отдельно: взять текущее видео из модалки? Но оно не наше. Оставим как есть.
-    alert('Скачивание из галереи пока не реализовано');
-  });
-  window.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
-
-  charSpan.innerText = 5000 - promptInput.value.length;
-})();
-</script>
+            // Инициализация
+            loadBalance();
+            initGrid();
+            renderGrid();
+            updateProblem();
+            setInterval(gameTick, 600);
+        })();
+    </script>
 </body>
 </html>
